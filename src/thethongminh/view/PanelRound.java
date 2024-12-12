@@ -6,6 +6,7 @@ package thethongminh.view;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.Area;
@@ -55,6 +56,15 @@ public class PanelRound extends JPanel {
         repaint();
     }
 
+    public Image getImage() {
+        return image;
+    }
+
+    public void setImage(Image image) {
+        this.image = image;
+    }
+    
+    private Image image;
     private int roundTopLeft = 0;
     private int roundTopRight = 0;
     private int roundBottomLeft = 0;
@@ -81,6 +91,11 @@ public class PanelRound extends JPanel {
         }
         g2.fill(area);
         g2.dispose();
+        
+        if (image != null) {
+            // Vẽ hình ảnh lên JPanel
+            g2.drawImage(image, 0, 0, getWidth(), getHeight(), this);
+        }
         super.paintComponent(grphcs);
     }
     
