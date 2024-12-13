@@ -30,7 +30,9 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import thethongminh.model.User;
 import thethongminh.utils.ImageUtils;
+import thethongminh.view.UserInfoEditingDialog;
 
 /**
  *
@@ -38,6 +40,7 @@ import thethongminh.utils.ImageUtils;
  */
 public class Home extends javax.swing.JFrame {
 
+    private User user = new User("Vũ Xuân Nam", "10/11/2002", "097 284 89 89", "001202037865", null);
     private Image image;
     private int userMoney = 2500000;
     private boolean canEditUserInfo = false;
@@ -52,48 +55,12 @@ public class Home extends javax.swing.JFrame {
         edtName.setEditable(false);
         edtDateOfBirth.setEditable(false);
         edtPhoneNumber.setEditable(false);
-        jTextField10.setEditable(false);
+        edtIdentityCard.setEditable(false);
         
         if (Login.image != null) {
             jLabel4.setIcon(new ImageIcon(Login.image));
         }
-        
-        panelRound5.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (!canEditUserInfo) {
-                    return;
-                }
-                // Khi người dùng nhấp chuột, mở cửa sổ chọn file
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setDialogTitle("Chọn một hình ảnh");
-                
-                // Chỉ lọc các file hình ảnh (JPG, PNG, GIF)
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "png", "gif");
-                fileChooser.setFileFilter(filter);
-                
-                // Mở cửa sổ chọn file
-                int returnValue = fileChooser.showOpenDialog(null);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    try {
-                        // Lấy file hình ảnh người dùng chọn
-                        File selectedFile = fileChooser.getSelectedFile();
-                        
-                        // Load the image from a file (replace with your image path)
-                        BufferedImage originalImage = ImageIO.read(selectedFile);
-                        
-                        // Resize the image to a new width and height
-                        int newWidth = 140; // Set desired width
-                        int newHeight = 140; // Set desired height
-                        BufferedImage resizedImage = ImageUtils.resizeImage(originalImage, newWidth, newHeight);
-                        jLabel4.setIcon(new ImageIcon(resizedImage));
-                        image = resizedImage;
-                    } catch (IOException ex) {
-                        Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-        });
+        updateUserInfo(user);
     }
 
     /**
@@ -123,7 +90,7 @@ public class Home extends javax.swing.JFrame {
         edtPhoneNumber = new javax.swing.JTextField();
         jPanel10 = new javax.swing.JPanel();
         jLabel9 = new javax.swing.JLabel();
-        jTextField10 = new javax.swing.JTextField();
+        edtIdentityCard = new javax.swing.JTextField();
         panelRound5 = new thethongminh.view.PanelRound();
         jLabel4 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
@@ -194,10 +161,9 @@ public class Home extends javax.swing.JFrame {
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(edtName))
+                .addComponent(jLabel3)
                 .addContainerGap(11, Short.MAX_VALUE))
+            .addComponent(edtName, javax.swing.GroupLayout.Alignment.TRAILING)
         );
 
         jPanel8.setBackground(new java.awt.Color(244, 247, 250));
@@ -227,10 +193,11 @@ public class Home extends javax.swing.JFrame {
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(edtDateOfBirth))
+                .addComponent(jLabel5)
                 .addContainerGap(11, Short.MAX_VALUE))
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addComponent(edtDateOfBirth)
+                .addContainerGap())
         );
 
         jPanel9.setBackground(new java.awt.Color(244, 247, 250));
@@ -260,10 +227,11 @@ public class Home extends javax.swing.JFrame {
             jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
-                    .addComponent(edtPhoneNumber))
+                .addComponent(jLabel7)
                 .addContainerGap(11, Short.MAX_VALUE))
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addComponent(edtPhoneNumber)
+                .addContainerGap())
         );
 
         jPanel10.setBackground(new java.awt.Color(244, 247, 250));
@@ -273,10 +241,10 @@ public class Home extends javax.swing.JFrame {
         jLabel9.setForeground(new java.awt.Color(106, 106, 106));
         jLabel9.setText("Số thẻ căn cước");
 
-        jTextField10.setBackground(new java.awt.Color(244, 247, 250));
-        jTextField10.setFont(new java.awt.Font("Helvetica Neue", 0, 18)); // NOI18N
-        jTextField10.setText("097 207 56 32");
-        jTextField10.setBorder(null);
+        edtIdentityCard.setBackground(new java.awt.Color(244, 247, 250));
+        edtIdentityCard.setFont(new java.awt.Font("Helvetica Neue", 0, 18)); // NOI18N
+        edtIdentityCard.setText("097 207 56 32");
+        edtIdentityCard.setBorder(null);
 
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
@@ -286,17 +254,18 @@ public class Home extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel9)
                 .addGap(158, 158, 158)
-                .addComponent(jTextField10, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(edtIdentityCard, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel10Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel9)
-                    .addComponent(jTextField10))
+                .addComponent(jLabel9)
                 .addContainerGap(11, Short.MAX_VALUE))
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addComponent(edtIdentityCard)
+                .addContainerGap())
         );
 
         panelRound5.setBackground(new java.awt.Color(217, 217, 217));
@@ -941,28 +910,7 @@ public class Home extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        if (canEditUserInfo) {
-            jButton1.setText("Sửa");
-            edtName.setEditable(false);
-            edtDateOfBirth.setEditable(false);
-            edtPhoneNumber.setEditable(false);
-            jTextField10.setEditable(false);
-            JOptionPane.showMessageDialog(null,
-                            "Cập nhật dữ liệu thành công!",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            jButton1.setText("Cập nhật");
-            edtName.setEditable(true);
-            edtDateOfBirth.setEditable(true);
-            edtPhoneNumber.setEditable(true);
-            jTextField10.setEditable(true);
-            edtName.setForeground(Color.darkGray);
-            edtDateOfBirth.setForeground(Color.darkGray);
-            edtPhoneNumber.setForeground(Color.darkGray);
-            jTextField10.setForeground(Color.darkGray);
-        }
-        canEditUserInfo = !canEditUserInfo;
+        new UserInfoEditingDialog(this, user).setVisible(true);
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -1002,6 +950,16 @@ public class Home extends javax.swing.JFrame {
                 }
     }//GEN-LAST:event_jButton2ActionPerformed
 
+    public void updateUserInfo(User user) {
+        this.user = user;
+        edtName.setText(user.getName());
+        edtDateOfBirth.setText(user.getDateOfBirth());
+        edtPhoneNumber.setText(user.getPhoneNumber());
+        edtIdentityCard.setText(user.getIdentityCard());
+        if (user.getAvatar() != null) {
+            jLabel4.setIcon(new ImageIcon(user.getAvatar()));
+        }
+    }
     /**
      * @param args the command line arguments
      */
@@ -1040,6 +998,7 @@ public class Home extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField edtDateOfBirth;
+    private javax.swing.JTextField edtIdentityCard;
     private javax.swing.JTextField edtName;
     private javax.swing.JTextField edtPhoneNumber;
     private javax.swing.JButton jButton1;
@@ -1084,7 +1043,6 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JTable jTable3;
     private javax.swing.JTable jTable4;
     private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField10;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField5;
     private javax.swing.JTextField jTextField6;

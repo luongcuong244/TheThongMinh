@@ -166,12 +166,10 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="edtName" alignment="3" max="32767" attributes="0"/>
-                          </Group>
+                          <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                           <EmptySpace pref="11" max="32767" attributes="0"/>
                       </Group>
+                      <Component id="edtName" alignment="1" max="32767" attributes="0"/>
                   </Group>
                 </DimensionLayout>
               </Layout>
@@ -229,11 +227,12 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="edtDateOfBirth" alignment="3" max="32767" attributes="0"/>
-                          </Group>
+                          <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                           <EmptySpace pref="11" max="32767" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="edtDateOfBirth" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -292,11 +291,12 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel7" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="edtPhoneNumber" alignment="3" max="32767" attributes="0"/>
-                          </Group>
+                          <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                           <EmptySpace pref="11" max="32767" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="edtPhoneNumber" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -346,7 +346,7 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="158" max="-2" attributes="0"/>
-                          <Component id="jTextField10" min="-2" pref="207" max="-2" attributes="0"/>
+                          <Component id="edtIdentityCard" min="-2" pref="207" max="-2" attributes="0"/>
                           <EmptySpace max="32767" attributes="0"/>
                       </Group>
                   </Group>
@@ -355,11 +355,12 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="3" attributes="0">
-                              <Component id="jLabel9" alignment="3" min="-2" max="-2" attributes="0"/>
-                              <Component id="jTextField10" alignment="3" max="32767" attributes="0"/>
-                          </Group>
+                          <Component id="jLabel9" min="-2" max="-2" attributes="0"/>
                           <EmptySpace pref="11" max="32767" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="edtIdentityCard" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -376,7 +377,7 @@
                     <Property name="text" type="java.lang.String" value="S&#x1ed1; th&#x1ebb; c&#x103;n c&#x1b0;&#x1edb;c"/>
                   </Properties>
                 </Component>
-                <Component class="javax.swing.JTextField" name="jTextField10">
+                <Component class="javax.swing.JTextField" name="edtIdentityCard">
                   <Properties>
                     <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                       <Color blue="fa" green="f7" red="f4" type="rgb"/>
