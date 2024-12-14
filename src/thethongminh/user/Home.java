@@ -11,8 +11,11 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.Locale;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -26,10 +29,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import thethongminh.database.DataConnection;
 import thethongminh.model.User;
 import thethongminh.utils.ImageUtils;
 import thethongminh.view.UserInfoEditingDialog;
@@ -61,8 +66,173 @@ public class Home extends javax.swing.JFrame {
             jLabel4.setIcon(new ImageIcon(Login.image));
         }
         updateUserInfo(user);
+        setDataForTransactionHistoryTable();
+        setDataForFlightHistoryTable();
+        setDataForTicketTable();
+        setDataForMyTicketTable();
     }
 
+    public void setDataForTransactionHistoryTable() {
+        try {
+            List<String[]> transactionHistoryData = DataConnection.fetchTransactionHistory();
+            
+            Vector<String> columnNames = new Vector<String>();
+            columnNames.add("Mã giao dịch");
+            columnNames.add("Mã thẻ");
+            columnNames.add("Thời gian");
+            columnNames.add("Số tiền");
+            columnNames.add("Loại");
+            columnNames.add("Mã vé");
+        
+            Vector<Vector<String>> data = new Vector<Vector<String>>();
+            for(int i = 0; i < transactionHistoryData.size();i++){
+                String[] item = transactionHistoryData.get(i);
+                Vector<String> row = new Vector<String>();
+                row.add(item[0]);
+                row.add(item[1]);
+                row.add(item[2]);
+                row.add(item[3]);
+                row.add(item[4]);
+                row.add(item[5]);
+                data.add(row);
+            }
+        
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+        
+            if(jTableTransactionHistory != null){
+                jTableTransactionHistory.setModel(tableModel);
+            };
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void setDataForFlightHistoryTable() {
+        try {
+            List<String[]> flightHistoryData = DataConnection.fetchFlightHistory();
+            
+            Vector<String> columnNames = new Vector<String>();
+            columnNames.add("Giờ đặt");
+            columnNames.add("Giờ đi");
+            columnNames.add("Giờ đến");
+            columnNames.add("Điểm đến");
+            columnNames.add("Điểm đi");
+            columnNames.add("Giá vé");
+        
+            Vector<Vector<String>> data = new Vector<Vector<String>>();
+            for(int i = 0; i < flightHistoryData.size();i++){
+                String[] item = flightHistoryData.get(i);
+                Vector<String> row = new Vector<String>();
+                row.add(item[0]);
+                row.add(item[1]);
+                row.add(item[2]);
+                row.add(item[3]);
+                row.add(item[4]);
+                row.add(item[5]);
+                data.add(row);
+            }
+        
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+        
+            if(jTableFlightHistory != null){
+                jTableFlightHistory.setModel(tableModel);
+            };
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void setDataForTicketTable() {
+        try {
+            List<String[]> ticketData = DataConnection.fetchTicket();
+            
+            Vector<String> columnNames = new Vector<String>();
+            columnNames.add("Mã vé");
+            columnNames.add("Số lượng");
+            columnNames.add("Hãng vé");
+        
+            Vector<Vector<String>> data = new Vector<Vector<String>>();
+            for(int i = 0; i < ticketData.size();i++){
+                String[] item = ticketData.get(i);
+                Vector<String> row = new Vector<String>();
+                row.add(item[0]);
+                row.add(item[1]);
+                row.add(item[2]);
+                data.add(row);
+            }
+        
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+        
+            if(jTableTicket != null){
+                jTableTicket.setModel(tableModel);
+            };
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void setDataForMyTicketTable() {
+        try {
+            List<String[]> myTicketData = DataConnection.fetchTicketOfMember();
+            
+            Vector<String> columnNames = new Vector<String>();
+            columnNames.add("Mã vé đã đặt");
+            columnNames.add("Mã vé");
+            columnNames.add("Mã chuyến bay");
+            columnNames.add("Mã người dùng");
+            columnNames.add("Số lượng đặt");
+            columnNames.add("Tổng thanh toán");
+        
+            Vector<Vector<String>> data = new Vector<Vector<String>>();
+            for(int i = 0; i < myTicketData.size();i++){
+                String[] item = myTicketData.get(i);
+                Vector<String> row = new Vector<String>();
+                row.add(item[0]);
+                row.add(item[1]);
+                row.add(item[2]);
+                row.add(item[3]);
+                row.add(item[4]);
+                row.add(item[5]);
+                data.add(row);
+            }
+        
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+        
+            if(jTableMyTicket != null){
+                jTableMyTicket.setModel(tableModel);
+            };
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -98,23 +268,23 @@ public class Home extends javax.swing.JFrame {
         jTextField1 = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        jTableTransactionHistory = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
         jTextField2 = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
+        jTableFlightHistory = new javax.swing.JTable();
         jPanel4 = new javax.swing.JPanel();
         jTextField6 = new javax.swing.JTextField();
         jLabel22 = new javax.swing.JLabel();
         jScrollPane4 = new javax.swing.JScrollPane();
-        jTable4 = new javax.swing.JTable();
+        jTableTicket = new javax.swing.JTable();
         jButton6 = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         jTextField5 = new javax.swing.JTextField();
         jLabel21 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
-        jTable3 = new javax.swing.JTable();
+        jTableMyTicket = new javax.swing.JTable();
         jButton7 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
@@ -342,7 +512,7 @@ public class Home extends javax.swing.JFrame {
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/thethongminh/image/ic_search.png"))); // NOI18N
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        jTableTransactionHistory.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"001", "001", "20:00 - 29/07/2024", "50.000 VNĐ", "Nạp tiền", ""},
                 {"002", "001", "21:04 - 23/06/2024", "2.000.000 VNĐ", "Mua vé", "003"},
@@ -403,7 +573,7 @@ public class Home extends javax.swing.JFrame {
                 "Mã giao dịch", "Mã thẻ", "Thời gian", "Số tiền", "Loại", "Mã vé"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(jTableTransactionHistory);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -438,7 +608,7 @@ public class Home extends javax.swing.JFrame {
 
         jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/thethongminh/image/ic_search.png"))); // NOI18N
 
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+        jTableFlightHistory.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"09:57:34  23/08/2023", "09:57:34  23/08/2023", "09:57:34  23/08/2023", "Hà Nội", "Đà Nẵng", "2.400.000 VNĐ"},
                 {null, null, null, "", null, null},
@@ -533,7 +703,7 @@ public class Home extends javax.swing.JFrame {
                 "Giờ đặt", "Giờ đi", "Giờ đến", "Điểm đến", "Điểm đi", "Giá vé"
             }
         ));
-        jScrollPane2.setViewportView(jTable2);
+        jScrollPane2.setViewportView(jTableFlightHistory);
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -568,7 +738,7 @@ public class Home extends javax.swing.JFrame {
 
         jLabel22.setIcon(new javax.swing.ImageIcon(getClass().getResource("/thethongminh/image/ic_search.png"))); // NOI18N
 
-        jTable4.setModel(new javax.swing.table.DefaultTableModel(
+        jTableTicket.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"001", "Hà Nội", "Đà Nẵng", "01:30 - 29/07/2024", "03:00 24/07/2024", "2.500.000 VNĐ"},
                 {null, null, null, null, "", null},
@@ -630,7 +800,7 @@ public class Home extends javax.swing.JFrame {
                 "Mã chuyến bay", "Điểm đi", "Điểm đến", "Ngày đi", "Ngày đến", "Giá vé"
             }
         ));
-        jScrollPane4.setViewportView(jTable4);
+        jScrollPane4.setViewportView(jTableTicket);
 
         jButton6.setBackground(new java.awt.Color(0, 153, 153));
         jButton6.setForeground(new java.awt.Color(255, 255, 255));
@@ -672,7 +842,7 @@ public class Home extends javax.swing.JFrame {
 
         jLabel21.setIcon(new javax.swing.ImageIcon(getClass().getResource("/thethongminh/image/ic_search.png"))); // NOI18N
 
-        jTable3.setModel(new javax.swing.table.DefaultTableModel(
+        jTableMyTicket.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"09:57:34  23/08/2023", "09:57:34  23/08/2023", "09:57:34  23/08/2023", "Hà Nội", "Đà Nẵng", "2.400.000 VNĐ"},
                 {null, null, null, "", null, null},
@@ -767,7 +937,7 @@ public class Home extends javax.swing.JFrame {
                 "Ngày đặt", "Ngày đi", "Ngày đến", "Điểm đi", "Điểm đến", "Giá vé"
             }
         ));
-        jScrollPane3.setViewportView(jTable3);
+        jScrollPane3.setViewportView(jTableMyTicket);
 
         jButton7.setBackground(new java.awt.Color(0, 153, 153));
         jButton7.setForeground(new java.awt.Color(255, 255, 255));
@@ -1038,10 +1208,10 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JTable jTable2;
-    private javax.swing.JTable jTable3;
-    private javax.swing.JTable jTable4;
+    private javax.swing.JTable jTableFlightHistory;
+    private javax.swing.JTable jTableMyTicket;
+    private javax.swing.JTable jTableTicket;
+    private javax.swing.JTable jTableTransactionHistory;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField5;
