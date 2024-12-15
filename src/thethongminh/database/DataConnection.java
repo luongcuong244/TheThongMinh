@@ -99,7 +99,7 @@ public class DataConnection {
                 String[] row = new String[]{
                     resultSet.getString("maVeDaDat"),
                     resultSet.getString("maVe"),
-                    resultSet.getString("maCB"),      
+                    resultSet.getString("maCB"),
                     resultSet.getString("idUser"),
                     resultSet.getString("soLuongDat"),
                     resultSet.getString("tongThanhToan"),
@@ -114,23 +114,23 @@ public class DataConnection {
         }
         return ticketMember;
     }
-    
+
     public static void payTicket(String maVeDaDat) throws ClassNotFoundException, SQLException {
-    // Sử dụng PreparedStatement để tránh SQL Injection
-    String query = "UPDATE vedadat SET daThanhToan = 1 WHERE maVeDaDat = ?";
-    
-    try (Connection connection = conn(); PreparedStatement statement = connection.prepareStatement(query)) {
-        // Thiết lập giá trị cho tham số trong câu lệnh SQL
-        statement.setString(1, maVeDaDat);
-        
-        // Thực thi câu lệnh UPDATE
-        int rowsAffected = statement.executeUpdate();
-        
-        if (rowsAffected > 0) {
-            System.out.println("Thanh toán thành công cho mã vé " + maVeDaDat);
-        } else {
-            System.out.println("Không tìm thấy mã vé " + maVeDaDat);
+        // Sử dụng PreparedStatement để tránh SQL Injection
+        String query = "UPDATE vedadat SET daThanhToan = 1 WHERE maVeDaDat = ?";
+
+        try (Connection connection = conn(); PreparedStatement statement = connection.prepareStatement(query)) {
+            // Thiết lập giá trị cho tham số trong câu lệnh SQL
+            statement.setString(1, maVeDaDat);
+
+            // Thực thi câu lệnh UPDATE
+            int rowsAffected = statement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Thanh toán thành công cho mã vé " + maVeDaDat);
+            } else {
+                System.out.println("Không tìm thấy mã vé " + maVeDaDat);
+            }
         }
     }
-}
 }
