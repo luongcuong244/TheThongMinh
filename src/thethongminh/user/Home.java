@@ -6,6 +6,7 @@ package thethongminh.user;
 
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -49,6 +50,8 @@ public class Home extends javax.swing.JFrame {
     private Image image;
     private int userMoney = 2500000;
     private boolean canEditUserInfo = false;
+    
+    private int selectedRowMyTicketTable = -1;
     /**
      * Creates new form MainFrame
      */
@@ -68,7 +71,6 @@ public class Home extends javax.swing.JFrame {
         updateUserInfo(user);
         setDataForTransactionHistoryTable();
         setDataForFlightHistoryTable();
-        setDataForTicketTable();
         setDataForMyTicketTable();
     }
 
@@ -155,43 +157,7 @@ public class Home extends javax.swing.JFrame {
             Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public void setDataForTicketTable() {
-        try {
-            List<String[]> ticketData = DataConnection.fetchTicket();
-            
-            Vector<String> columnNames = new Vector<String>();
-            columnNames.add("Mã vé");
-            columnNames.add("Số lượng");
-            columnNames.add("Hãng vé");
         
-            Vector<Vector<String>> data = new Vector<Vector<String>>();
-            for(int i = 0; i < ticketData.size();i++){
-                String[] item = ticketData.get(i);
-                Vector<String> row = new Vector<String>();
-                row.add(item[0]);
-                row.add(item[1]);
-                row.add(item[2]);
-                data.add(row);
-            }
-        
-            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            };
-        
-            if(jTableTicket != null){
-                jTableTicket.setModel(tableModel);
-            };
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
-            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
     public void setDataForMyTicketTable() {
         try {
             List<String[]> myTicketData = DataConnection.fetchTicketOfMember();
@@ -203,6 +169,7 @@ public class Home extends javax.swing.JFrame {
             columnNames.add("Mã người dùng");
             columnNames.add("Số lượng đặt");
             columnNames.add("Tổng thanh toán");
+            columnNames.add("Trạng thái");
         
             Vector<Vector<String>> data = new Vector<Vector<String>>();
             for(int i = 0; i < myTicketData.size();i++){
@@ -214,6 +181,7 @@ public class Home extends javax.swing.JFrame {
                 row.add(item[3]);
                 row.add(item[4]);
                 row.add(item[5]);
+                row.add(item[6]);
                 data.add(row);
             }
         
@@ -226,6 +194,26 @@ public class Home extends javax.swing.JFrame {
         
             if(jTableMyTicket != null){
                 jTableMyTicket.setModel(tableModel);
+                jTableMyTicket.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent event) {
+                        if(event.getButton() != MouseEvent.BUTTON1){
+                            return;
+                        }
+                        if (event.getClickCount() == 1) {
+                            Point pnt = event.getPoint();
+                            int row = jTableMyTicket.rowAtPoint(pnt);
+                            selectedRowMyTicketTable = row;
+                            String status = jTableMyTicket.getValueAt(row, 6).toString();
+                            if (status.equals("Đã thanh toán")) {
+                                btnPay.setEnabled(false);
+                            } else {
+                                btnPay.setEnabled(true);
+                            }
+                            return;
+                        }
+                    }
+                });
             };
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
@@ -274,19 +262,15 @@ public class Home extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableFlightHistory = new javax.swing.JTable();
-        jPanel4 = new javax.swing.JPanel();
-        jTextField6 = new javax.swing.JTextField();
-        jLabel22 = new javax.swing.JLabel();
-        jScrollPane4 = new javax.swing.JScrollPane();
-        jTableTicket = new javax.swing.JTable();
-        jButton6 = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         jTextField5 = new javax.swing.JTextField();
         jLabel21 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTableMyTicket = new javax.swing.JTable();
         jButton7 = new javax.swing.JButton();
-        jButton8 = new javax.swing.JButton();
+        jPanel4 = new javax.swing.JPanel();
+        btnCancelTicket = new javax.swing.JButton();
+        btnPay = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         jLabel15 = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
@@ -730,110 +714,6 @@ public class Home extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Lịch sử chuyến bay", jPanel3);
 
-        jPanel4.setBackground(new java.awt.Color(244, 247, 250));
-
-        jTextField6.setBackground(new java.awt.Color(231, 251, 255));
-        jTextField6.setToolTipText("");
-        jTextField6.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(107, 228, 255)));
-
-        jLabel22.setIcon(new javax.swing.ImageIcon(getClass().getResource("/thethongminh/image/ic_search.png"))); // NOI18N
-
-        jTableTicket.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {"001", "Hà Nội", "Đà Nẵng", "01:30 - 29/07/2024", "03:00 24/07/2024", "2.500.000 VNĐ"},
-                {null, null, null, null, "", null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null},
-                {null, null, null, null, null, null}
-            },
-            new String [] {
-                "Mã chuyến bay", "Điểm đi", "Điểm đến", "Ngày đi", "Ngày đến", "Giá vé"
-            }
-        ));
-        jScrollPane4.setViewportView(jTableTicket);
-
-        jButton6.setBackground(new java.awt.Color(0, 153, 153));
-        jButton6.setForeground(new java.awt.Color(255, 255, 255));
-        jButton6.setText("Đặt vé");
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(19, 19, 19)
-                .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, 331, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel22)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton6)
-                .addGap(19, 19, 19))
-            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 994, Short.MAX_VALUE)
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(20, 20, 20)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jLabel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jTextField6)
-                    .addComponent(jButton6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE))
-        );
-
-        jTabbedPane1.addTab("Đặt vé", jPanel4);
-
         jPanel6.setBackground(new java.awt.Color(244, 247, 250));
 
         jTextField5.setBackground(new java.awt.Color(231, 251, 255));
@@ -943,9 +823,40 @@ public class Home extends javax.swing.JFrame {
         jButton7.setForeground(new java.awt.Color(255, 255, 255));
         jButton7.setText("Đặt vé");
 
-        jButton8.setBackground(new java.awt.Color(0, 153, 153));
-        jButton8.setForeground(new java.awt.Color(255, 255, 255));
-        jButton8.setText("Huỷ vé");
+        jPanel4.setBackground(new java.awt.Color(244, 247, 250));
+
+        btnCancelTicket.setBackground(new java.awt.Color(0, 153, 153));
+        btnCancelTicket.setForeground(new java.awt.Color(255, 255, 255));
+        btnCancelTicket.setText("Huỷ vé");
+        btnCancelTicket.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelTicketActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addContainerGap(107, Short.MAX_VALUE)
+                .addComponent(btnCancelTicket)
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(btnCancelTicket, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+
+        btnPay.setBackground(new java.awt.Color(102, 102, 255));
+        btnPay.setForeground(new java.awt.Color(255, 255, 255));
+        btnPay.setText("Thanh toán");
+        btnPay.setEnabled(false);
+        btnPay.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPayActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
@@ -957,8 +868,10 @@ public class Home extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addComponent(jLabel21)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton8)
-                .addGap(20, 20, 20))
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(btnPay, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(19, 19, 19))
             .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 994, Short.MAX_VALUE)
             .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel6Layout.createSequentialGroup()
@@ -973,9 +886,10 @@ public class Home extends javax.swing.JFrame {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel21, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jTextField5)
-                    .addComponent(jButton8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE))
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnPay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE))
             .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel6Layout.createSequentialGroup()
                     .addGap(215, 215, 215)
@@ -1079,10 +993,6 @@ public class Home extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        new UserInfoEditingDialog(this, user).setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
-
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         JTextField amountOfMoney = new JTextField();
 
@@ -1115,10 +1025,44 @@ public class Home extends javax.swing.JFrame {
                         return;
                     }
                     userMoney += amount;
-                    NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
-                    jLabel6.setText(formatter.format(userMoney) + " VNĐ");
+                    updateMoneyUI();
                 }
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        new UserInfoEditingDialog(this, user).setVisible(true);
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void btnCancelTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelTicketActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCancelTicketActionPerformed
+
+    private void btnPayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPayActionPerformed
+        if (selectedRowMyTicketTable > -1) {
+            try {
+                int money = Integer.parseInt(jTableMyTicket.getValueAt(selectedRowMyTicketTable, 5).toString());
+                if (money > userMoney) {
+                    JOptionPane.showMessageDialog(this,
+                                "Không đủ tiền!",
+                                "Warning",
+                                JOptionPane.WARNING_MESSAGE);
+                        return;
+                }
+                
+                String maVeDaDat = jTableMyTicket.getValueAt(selectedRowMyTicketTable, 0).toString();
+                DataConnection.payTicket(maVeDaDat);
+                setDataForMyTicketTable();
+                selectedRowMyTicketTable = -1;
+                btnPay.setEnabled(false);
+                userMoney -= money;
+                updateMoneyUI();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_btnPayActionPerformed
 
     public void updateUserInfo(User user) {
         this.user = user;
@@ -1129,6 +1073,11 @@ public class Home extends javax.swing.JFrame {
         if (user.getAvatar() != null) {
             jLabel4.setIcon(new ImageIcon(user.getAvatar()));
         }
+    }
+    
+    public void updateMoneyUI() {
+        NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
+        jLabel6.setText(formatter.format(userMoney) + " VNĐ");
     }
     /**
      * @param args the command line arguments
@@ -1167,6 +1116,8 @@ public class Home extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnCancelTicket;
+    private javax.swing.JButton btnPay;
     private javax.swing.JTextField edtDateOfBirth;
     private javax.swing.JTextField edtIdentityCard;
     private javax.swing.JTextField edtName;
@@ -1174,16 +1125,13 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
-    private javax.swing.JButton jButton8;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel21;
-    private javax.swing.JLabel jLabel22;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1205,17 +1153,14 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableFlightHistory;
     private javax.swing.JTable jTableMyTicket;
-    private javax.swing.JTable jTableTicket;
     private javax.swing.JTable jTableTransactionHistory;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField5;
-    private javax.swing.JTextField jTextField6;
     private thethongminh.view.PanelRound panelRound1;
     private thethongminh.view.PanelRound panelRound2;
     private thethongminh.view.PanelRound panelRound3;
