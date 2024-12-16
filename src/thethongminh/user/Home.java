@@ -50,8 +50,9 @@ public class Home extends javax.swing.JFrame {
     private Image image;
     private int userMoney = 2500000;
     private boolean canEditUserInfo = false;
-    
+
     private int selectedRowMyTicketTable = -1;
+
     /**
      * Creates new form MainFrame
      */
@@ -59,12 +60,12 @@ public class Home extends javax.swing.JFrame {
         initComponents();
         NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
         jLabel6.setText(formatter.format(userMoney) + " VNĐ");
-        
+
         edtName.setEditable(false);
         edtDateOfBirth.setEditable(false);
         edtPhoneNumber.setEditable(false);
         edtIdentityCard.setEditable(false);
-        
+
         if (Login.image != null) {
             jLabel4.setIcon(new ImageIcon(Login.image));
         }
@@ -77,7 +78,7 @@ public class Home extends javax.swing.JFrame {
     public void setDataForTransactionHistoryTable() {
         try {
             List<String[]> transactionHistoryData = DataConnection.fetchTransactionHistory();
-            
+
             Vector<String> columnNames = new Vector<String>();
             columnNames.add("Mã giao dịch");
             columnNames.add("Mã thẻ");
@@ -85,9 +86,9 @@ public class Home extends javax.swing.JFrame {
             columnNames.add("Số tiền");
             columnNames.add("Loại");
             columnNames.add("Mã vé");
-        
+
             Vector<Vector<String>> data = new Vector<Vector<String>>();
-            for(int i = 0; i < transactionHistoryData.size();i++){
+            for (int i = 0; i < transactionHistoryData.size(); i++) {
                 String[] item = transactionHistoryData.get(i);
                 Vector<String> row = new Vector<String>();
                 row.add(item[0]);
@@ -98,15 +99,15 @@ public class Home extends javax.swing.JFrame {
                 row.add(item[5]);
                 data.add(row);
             }
-        
-            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
+
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
                     return false;
                 }
             };
-        
-            if(jTableTransactionHistory != null){
+
+            if (jTableTransactionHistory != null) {
                 jTableTransactionHistory.setModel(tableModel);
             };
         } catch (ClassNotFoundException ex) {
@@ -115,11 +116,11 @@ public class Home extends javax.swing.JFrame {
             Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void setDataForFlightHistoryTable() {
         try {
             List<String[]> flightHistoryData = DataConnection.fetchFlightHistory();
-            
+
             Vector<String> columnNames = new Vector<String>();
             columnNames.add("Giờ đặt");
             columnNames.add("Giờ đi");
@@ -127,9 +128,9 @@ public class Home extends javax.swing.JFrame {
             columnNames.add("Điểm đến");
             columnNames.add("Điểm đi");
             columnNames.add("Giá vé");
-        
+
             Vector<Vector<String>> data = new Vector<Vector<String>>();
-            for(int i = 0; i < flightHistoryData.size();i++){
+            for (int i = 0; i < flightHistoryData.size(); i++) {
                 String[] item = flightHistoryData.get(i);
                 Vector<String> row = new Vector<String>();
                 row.add(item[0]);
@@ -140,15 +141,15 @@ public class Home extends javax.swing.JFrame {
                 row.add(item[5]);
                 data.add(row);
             }
-        
-            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
+
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
                     return false;
                 }
             };
-        
-            if(jTableFlightHistory != null){
+
+            if (jTableFlightHistory != null) {
                 jTableFlightHistory.setModel(tableModel);
             };
         } catch (ClassNotFoundException ex) {
@@ -157,11 +158,11 @@ public class Home extends javax.swing.JFrame {
             Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-        
+
     public void setDataForMyTicketTable() {
         try {
             List<String[]> myTicketData = DataConnection.fetchTicketOfMember();
-            
+
             Vector<String> columnNames = new Vector<String>();
             columnNames.add("Mã vé đã đặt");
             columnNames.add("Mã vé");
@@ -170,9 +171,9 @@ public class Home extends javax.swing.JFrame {
             columnNames.add("Số lượng đặt");
             columnNames.add("Tổng thanh toán");
             columnNames.add("Trạng thái");
-        
+
             Vector<Vector<String>> data = new Vector<Vector<String>>();
-            for(int i = 0; i < myTicketData.size();i++){
+            for (int i = 0; i < myTicketData.size(); i++) {
                 String[] item = myTicketData.get(i);
                 Vector<String> row = new Vector<String>();
                 row.add(item[0]);
@@ -184,20 +185,20 @@ public class Home extends javax.swing.JFrame {
                 row.add(item[6]);
                 data.add(row);
             }
-        
-            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames){
+
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
                     return false;
                 }
             };
-        
-            if(jTableMyTicket != null){
+
+            if (jTableMyTicket != null) {
                 jTableMyTicket.setModel(tableModel);
                 jTableMyTicket.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent event) {
-                        if(event.getButton() != MouseEvent.BUTTON1){
+                        if (event.getButton() != MouseEvent.BUTTON1) {
                             return;
                         }
                         if (event.getClickCount() == 1) {
@@ -221,6 +222,7 @@ public class Home extends javax.swing.JFrame {
             Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -996,37 +998,39 @@ public class Home extends javax.swing.JFrame {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         JTextField amountOfMoney = new JTextField();
 
-                ((AbstractDocument) amountOfMoney.getDocument()).setDocumentFilter(new DocumentFilter() {
-                    Pattern regEx = Pattern.compile("\\d+");
+        ((AbstractDocument) amountOfMoney.getDocument()).setDocumentFilter(new DocumentFilter() {
+            Pattern regEx = Pattern.compile("\\d+");
 
-                    @Override
-                    public void replace(DocumentFilter.FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
-                        Matcher matcher = regEx.matcher(text);
-                        if (!matcher.matches()) {
-                            return;
-                        }
-                        super.replace(fb, offset, length, text, attrs);
-                    }
-                });
-        
-        final JComponent[] inputs = new JComponent[]{
-                    new JLabel("Nạp tiền"), amountOfMoney,};
-                int result = JOptionPane.showConfirmDialog(null, inputs, "Nạp tiền", JOptionPane.PLAIN_MESSAGE);
-                if (result == JOptionPane.OK_OPTION) {
-                    if (amountOfMoney.getText().trim().isEmpty()) {
-                        return;
-                    }
-                    int amount = Integer.parseInt(amountOfMoney.getText().trim());
-                    if (amount <= 0) {
-                        JOptionPane.showMessageDialog(this,
-                                "Số tiền phải lớn hơn 0!",
-                                "Warning",
-                                JOptionPane.WARNING_MESSAGE);
-                        return;
-                    }
-                    userMoney += amount;
-                    updateMoneyUI();
+            @Override
+            public void replace(DocumentFilter.FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                Matcher matcher = regEx.matcher(text);
+                if (!matcher.matches()) {
+                    return;
                 }
+                super.replace(fb, offset, length, text, attrs);
+            }
+        });
+
+        final JComponent[] inputs = new JComponent[]{
+            new JLabel("Nạp tiền"), amountOfMoney,};
+        int result = JOptionPane.showConfirmDialog(null, inputs, "Nạp tiền", JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            if (amountOfMoney.getText().trim().isEmpty()) {
+                return;
+            }
+            int amount = Integer.parseInt(amountOfMoney.getText().trim());
+            if (amount <= 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Số tiền phải lớn hơn 0!",
+                        "Warning",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            userMoney += amount;
+            updateMoneyUI();
+            DataConnection.topupMoney("1", "001", amount);
+            setDataForTransactionHistoryTable();
+        }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -1034,7 +1038,14 @@ public class Home extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void btnCancelTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelTicketActionPerformed
-        // TODO add your handling code here:
+        if (selectedRowMyTicketTable > -1) {
+            String maVeDaDat = jTableMyTicket.getValueAt(selectedRowMyTicketTable, 0).toString();
+            DataConnection.cancelTicket(maVeDaDat);
+            setDataForMyTicketTable();
+            setDataForTransactionHistoryTable();
+            selectedRowMyTicketTable = -1;
+            btnPay.setEnabled(false);
+        }
     }//GEN-LAST:event_btnCancelTicketActionPerformed
 
     private void btnPayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPayActionPerformed
@@ -1043,15 +1054,16 @@ public class Home extends javax.swing.JFrame {
                 int money = Integer.parseInt(jTableMyTicket.getValueAt(selectedRowMyTicketTable, 5).toString());
                 if (money > userMoney) {
                     JOptionPane.showMessageDialog(this,
-                                "Không đủ tiền!",
-                                "Warning",
-                                JOptionPane.WARNING_MESSAGE);
-                        return;
+                            "Không đủ tiền!",
+                            "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
                 }
-                
+
                 String maVeDaDat = jTableMyTicket.getValueAt(selectedRowMyTicketTable, 0).toString();
-                DataConnection.payTicket(maVeDaDat);
+                DataConnection.payTicket(maVeDaDat, "001", money);
                 setDataForMyTicketTable();
+                setDataForTransactionHistoryTable();
                 selectedRowMyTicketTable = -1;
                 btnPay.setEnabled(false);
                 userMoney -= money;
@@ -1074,11 +1086,12 @@ public class Home extends javax.swing.JFrame {
             jLabel4.setIcon(new ImageIcon(user.getAvatar()));
         }
     }
-    
+
     public void updateMoneyUI() {
         NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
         jLabel6.setText(formatter.format(userMoney) + " VNĐ");
     }
+
     /**
      * @param args the command line arguments
      */
