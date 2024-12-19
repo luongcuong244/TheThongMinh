@@ -4,15 +4,9 @@
  */
 package thethongminh.user;
 
-import java.awt.Color;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.Arrays;
@@ -23,29 +17,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.imageio.ImageIO;
-import javax.smartcardio.CardException;
 import javax.smartcardio.ResponseAPDU;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import thethongminh.database.DataConnection;
-import thethongminh.model.Constants;
 import thethongminh.model.User;
 import thethongminh.utils.CardManager;
-import thethongminh.utils.CardUtils;
-import thethongminh.utils.ImageUtils;
 import thethongminh.view.UserInfoEditingDialog;
 
 /**
