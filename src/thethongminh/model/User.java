@@ -13,15 +13,15 @@ import java.awt.image.BufferedImage;
 public class User {
     private String name;
     private String dateOfBirth;
+    private String address;
     private String phoneNumber;
-    private String identityCard;
     private BufferedImage avatar;
 
-    public User(String name, String dateOfBirth, String phoneNumber, String identityCard, BufferedImage avatar) {
+    public User(String name, String dateOfBirth, String address, String phoneNumber, BufferedImage avatar) {
         this.name = name;
         this.dateOfBirth = dateOfBirth;
+        this.address = address;
         this.phoneNumber = phoneNumber;
-        this.identityCard = identityCard;
         this.avatar = avatar;
     }
 
@@ -41,20 +41,20 @@ public class User {
         this.dateOfBirth = dateOfBirth;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
-    }
-
-    public String getIdentityCard() {
-        return identityCard;
-    }
-
-    public void setIdentityCard(String identityCard) {
-        this.identityCard = identityCard;
     }
 
     public BufferedImage getAvatar() {
@@ -64,4 +64,6 @@ public class User {
     public void setAvatar(BufferedImage avatar) {
         this.avatar = avatar;
     }
+
+   
 }

@@ -1,57 +1,74 @@
 package thethongminh.user;
 
+import com.github.lgooddatepicker.components.DatePickerSettings;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.smartcardio.ResponseAPDU;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import thethongminh.utils.CardManager;
 import thethongminh.utils.ImageUtils;
+import java.util.Locale;
+import javax.smartcardio.CardException;
+import thethongminh.database.DataConnection;
+import thethongminh.model.Card;
+import thethongminh.model.Constants;
+import thethongminh.model.User;
+import thethongminh.utils.CardUtils;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-
 /**
  *
  * @author LENOVO
  */
 public class Login extends javax.swing.JFrame {
-
+    
     public static BufferedImage image;
+    CardManager cardManager;
+    private static ResponseAPDU response;
+
     /**
      * Creates new form Admin
      */
     public Login() {
         initComponents();
+        
+        setLocationRelativeTo(null);
+        cardManager = CardManager.getInstance();
+        
         jPanelAvatar.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 // Khi người dùng nhấp chuột, mở cửa sổ chọn file
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setDialogTitle("Chọn một hình ảnh");
-                
+
                 // Chỉ lọc các file hình ảnh (JPG, PNG, GIF)
                 FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "png", "gif");
                 fileChooser.setFileFilter(filter);
-                
+
                 // Mở cửa sổ chọn file
                 int returnValue = fileChooser.showOpenDialog(null);
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
                     try {
                         // Lấy file hình ảnh người dùng chọn
                         File selectedFile = fileChooser.getSelectedFile();
-                        
+
                         // Load the image from a file (replace with your image path)
                         BufferedImage originalImage = ImageIO.read(selectedFile);
-                        
+
                         // Resize the image to a new width and height
                         int newWidth = 140; // Set desired width
                         int newHeight = 140; // Set desired height
@@ -65,7 +82,7 @@ public class Login extends javax.swing.JFrame {
             }
         });
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -80,7 +97,6 @@ public class Login extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         edtName = new thethongminh.view.HintTextField();
         jLabel2 = new javax.swing.JLabel();
-        edtDateOfBirth = new thethongminh.view.HintTextField();
         jLabel3 = new javax.swing.JLabel();
         edtAddress = new thethongminh.view.HintTextField();
         jLabel5 = new javax.swing.JLabel();
@@ -90,6 +106,7 @@ public class Login extends javax.swing.JFrame {
         jPanelAvatar = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         btnInitUserData = new javax.swing.JButton();
+        datePicker1 = new com.github.lgooddatepicker.components.DatePicker();
         jPanel5 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
@@ -117,9 +134,6 @@ public class Login extends javax.swing.JFrame {
 
         jLabel2.setForeground(new java.awt.Color(102, 102, 102));
         jLabel2.setText("Ngày sinh");
-
-        edtDateOfBirth.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(224, 224, 224)));
-        edtDateOfBirth.setHint("Nhập ngày sinh");
 
         jLabel3.setForeground(new java.awt.Color(102, 102, 102));
         jLabel3.setText("Địa chỉ");
@@ -181,15 +195,15 @@ public class Login extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(38, 38, 38)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel5)
-                    .addComponent(edtPhoneNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 418, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(edtPhoneNumber, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
                     .addComponent(jLabel3)
-                    .addComponent(edtAddress, javax.swing.GroupLayout.PREFERRED_SIZE, 418, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(edtAddress, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
                     .addComponent(jLabel2)
-                    .addComponent(edtDateOfBirth, javax.swing.GroupLayout.PREFERRED_SIZE, 418, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(edtName, javax.swing.GroupLayout.PREFERRED_SIZE, 418, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
+                    .addComponent(edtName, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
+                    .addComponent(jLabel1)
+                    .addComponent(datePicker1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 41, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -215,7 +229,7 @@ public class Login extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(edtDateOfBirth, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(datePicker1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel3)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -225,13 +239,19 @@ public class Login extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(edtPhoneNumber, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(91, Short.MAX_VALUE))
+                .addContainerGap(99, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                     .addContainerGap(321, Short.MAX_VALUE)
                     .addComponent(btnInitUserData, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(21, 21, 21)))
         );
+
+        DatePickerSettings settings = new DatePickerSettings(new Locale("vi"));
+        settings.setFormatForDatesCommonEra("d-M-yyyy"); // Định dạng ngày tháng năm
+        settings.setAllowKeyboardEditing(false); // Không cho phép nhập tay
+
+        datePicker1.setSettings(settings);
 
         jPanel5.setBackground(new java.awt.Color(234, 246, 252));
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Mã pin"));
@@ -371,55 +391,242 @@ public class Login extends javax.swing.JFrame {
 
     private void btnLockCardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLockCardActionPerformed
         JOptionPane.showMessageDialog(null,
-                            "Khoá thẻ thành công!",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
+                "Khoá thẻ thành công!",
+                "Thông báo",
+                JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_btnLockCardActionPerformed
 
     private void btnInitUserDataActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnInitUserDataActionPerformed
         String name = edtName.getText().trim();
-        String dateOfBirth = edtDateOfBirth.getText().trim();
+        String dateOfBirth = datePicker1.getText();
         String address = edtAddress.getText().trim();
         String phoneNumber = edtPhoneNumber.getText().trim();
+        
+        System.out.println("name" + name);
+        System.out.println("dateOfBirth" + dateOfBirth);
+        System.out.println("address" + address);
+        System.out.println("phoneNumber" + phoneNumber);
+        System.out.println("imge: " + image);
+        
+        DataConnection.addUser(new User(name, dateOfBirth, address, phoneNumber, image));
+        
         if (name.isEmpty() || dateOfBirth.isEmpty() || address.isEmpty() || phoneNumber.isEmpty() || image == null) {
             JOptionPane.showMessageDialog(null,
-                            "Vui lòng nhập đủ dữ liệu!",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    "Vui lòng nhập đủ dữ liệu!",
+                    "Thông báo",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
-        JOptionPane.showMessageDialog(null,
-                            "Cập nhật dữ liệu thành công!",
+        
+        if (!phoneNumber.matches("^0\\d{9}$")) {
+            JOptionPane.showMessageDialog(null,
+                    "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.\n Định dạng 0xxx - 10 số",
+                    "Thông báo",
+                    JOptionPane.WARNING_MESSAGE);
+            
+            return;
+        }
+        
+        try {
+            
+            byte[] nameByte = CardUtils.convertStringUTF8ToBytes(name);
+            byte[] dateOfBirthByte = CardUtils.convertStringUTF8ToBytes(dateOfBirth);
+            byte[] addressByte = CardUtils.convertStringUTF8ToBytes(address);
+            byte[] phoneByte = CardUtils.convertStringUTF8ToBytes(phoneNumber);
+            byte[] imageByte = ImageUtils.bufferedImageToByteArray(image);
+            
+            long timestamp = System.currentTimeMillis();
+            byte[] cardID = CardUtils.convertStringUTF8ToBytes(String.valueOf(timestamp));
+            
+            byte[] data = CardUtils.createData(
+                    cardID,
+                    new byte[]{Constants.SEPARATOR},
+                    nameByte,
+                    new byte[]{Constants.SEPARATOR},
+                    dateOfBirthByte,
+                    new byte[]{Constants.SEPARATOR},
+                    addressByte,
+                    new byte[]{Constants.SEPARATOR},
+                    phoneByte,
+                    new byte[]{Constants.SEPARATOR},
+                    imageByte
+            );
+            
+            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_ENTER, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, data);
+            int sw = response.getSW();
+            System.out.println("sw INS_ENTER res: " + CardUtils.convertSWToHex(sw));
+            String publicKey = CardUtils.converBytesToHex(response.getData());
+            System.out.println("data INS_ENTER res: " + publicKey);
+            switch (sw) {
+                case Constants.SW_SUCCESS:
+                    int userId = DataConnection.addUser(new User(name, dateOfBirth, address, phoneNumber, image));
+                    if (userId != 0) {
+                        DataConnection.addCard(userId, CardUtils.convertBytesToStringUTF8(cardID), publicKey);
+                    }
+                    
+                    JOptionPane.showMessageDialog(null,
+                            "Khởi tạo dữ liệu thành công!",
                             "Thông báo",
                             JOptionPane.INFORMATION_MESSAGE);
+                    
+                    break;
+                case Constants.SW_DATA_INVALID:
+                    JOptionPane.showMessageDialog(null,
+                            "Sai định dạng dữ liệu!",
+                            "Thông báo",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                case Constants.SW_WRONG_LENGTH:
+                    JOptionPane.showMessageDialog(null,
+                            "Sai độ dài dữ liệu!",
+                            "Thông báo",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                default:
+                    System.out.println("Unknown res SW");
+                    break;
+            }
+            
+        } catch (IOException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+            
+        } catch (CardException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }//GEN-LAST:event_btnInitUserDataActionPerformed
 
     private void btnUnlockCardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnlockCardActionPerformed
-        JOptionPane.showMessageDialog(null,
+        try {
+            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_UNBLOCK_PIN, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, null);
+            int sw = response.getSW();
+            System.out.println("sw UNBLOCK_PIN res: " + CardUtils.convertSWToHex(sw));
+            System.out.println("data UNBLOCK_PIN res: " + CardUtils.converBytesToHex(response.getData()));
+            
+            switch (sw) {
+                case Constants.SW_SUCCESS:
+                    JOptionPane.showMessageDialog(null,
                             "Mở khoá thẻ thành công!",
                             "Thông báo",
                             JOptionPane.INFORMATION_MESSAGE);
+                    break;
+                default:
+                    System.out.println("Unknown res SW");
+                    break;
+            }
+        } catch (CardException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btnUnlockCardActionPerformed
 
     private void btnResetCardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResetCardActionPerformed
         JOptionPane.showMessageDialog(null,
-                            "Reset thẻ thành công!",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
+                "Reset thẻ thành công!",
+                "Thông báo",
+                JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_btnResetCardActionPerformed
 
     private void btnConfirmPinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConfirmPinActionPerformed
-        String pin = edtPin.getPassword().toString();
+        char[] enteredPin = edtPin.getPassword();
+        String pin = new String(enteredPin).trim();
+        System.out.println("pin: " + pin);
+        int pinLength = pin.length();
+        
+        System.out.println("pinLength: " + pinLength);
+        
         if (pin.isEmpty()) {
             JOptionPane.showMessageDialog(null,
-                            "Mã pin không được để trống!",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    "Mã pin không được để trống!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
-        this.setVisible(false);
-        new Home().setVisible(true);
+        
+        if (pinLength != 6) {
+            JOptionPane.showMessageDialog(null,
+                    "Mã PIN phải có đúng 6 chữ số!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        if (!pin.matches("\\d{6}")) {
+            JOptionPane.showMessageDialog(null,
+                    "Mã PIN chỉ được chứa các chữ số từ 0 đến 9!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        try {
+            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_VERIFY_PIN, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, CardUtils.convertPinToByte(pin));
+            
+            int sw = response.getSW();
+            byte[] resData = response.getData();
+            System.out.println("sw VERIFY_PIN res: " + CardUtils.convertSWToHex(sw));
+            System.out.println("data VERIFY_PIN res: " + CardUtils.converBytesToHex(response.getData()));
+            
+            int numberOfRetries;
+            switch (sw) {
+                case Constants.SW_INVALID_PIN_LENGTH:
+                    
+                    numberOfRetries = CardUtils.covertBytesToInt(resData);
+                    System.out.println("sw numberOfRetries res: " + numberOfRetries);
+                    JOptionPane.showMessageDialog(null,
+                            "Độ dài PIN không chính xác!\nCòn " + numberOfRetries + " lần nhập!",
+                            "Thông báo",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                case Constants.SW_VERIFICATION_FAILED:
+                    
+                    numberOfRetries = CardUtils.covertBytesToInt(resData);
+                    System.out.println("sw numberOfRetries res: " + numberOfRetries);
+                    JOptionPane.showMessageDialog(null,
+                            "Mã PIN không chính xác!\nCòn " + numberOfRetries + " lần nhập!",
+                            "Thông báo",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                case Constants.SW_PIN_BLOCKED:
+                    JOptionPane.showMessageDialog(null,
+                            "Thẻ đã bị khóa",
+                            "Thông báo",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                case Constants.SW_PIN_VALIDATED:
+                    JOptionPane.showMessageDialog(null,
+                            "Mã PIN chính xác!\nĐăng nhập thành công",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+                   
+                    this.setVisible(false);
+                    new Home().setVisible(true);
+                    break;
+                
+                default:
+                    System.out.println("Unknown res SW");
+//                    this.setVisible(false);
+//                    new Home().setVisible(true);
+                    break;
+            }
+            
+        } catch (CardException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }//GEN-LAST:event_btnConfirmPinActionPerformed
+    
+    public void resetNumberOfRetries() {
+        
+        try {
+            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_RESET_PIN, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, null);
+            int sw = response.getSW();
+            System.out.println("sw RESET_PIN res: " + CardUtils.convertSWToHex(sw));
+            System.out.println("data RESET_PIN res: " + CardUtils.converBytesToHex(response.getData()));
+        } catch (CardException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
 
     /**
      * @param args the command line arguments
@@ -478,6 +685,38 @@ public class Login extends javax.swing.JFrame {
         //</editor-fold>
         //</editor-fold>
         //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -493,8 +732,8 @@ public class Login extends javax.swing.JFrame {
     private javax.swing.JButton btnLockCard;
     private javax.swing.JButton btnResetCard;
     private javax.swing.JButton btnUnlockCard;
+    private com.github.lgooddatepicker.components.DatePicker datePicker1;
     private thethongminh.view.HintTextField edtAddress;
-    private thethongminh.view.HintTextField edtDateOfBirth;
     private thethongminh.view.HintTextField edtName;
     private thethongminh.view.HintTextField edtPhoneNumber;
     private javax.swing.JPasswordField edtPin;

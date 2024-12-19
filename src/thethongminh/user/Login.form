@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<Form version="1.3" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
+<Form version="1.5" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
     <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
@@ -89,15 +89,15 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="38" max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
                           <Component id="jLabel5" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="edtPhoneNumber" alignment="0" min="-2" pref="418" max="-2" attributes="0"/>
+                          <Component id="edtPhoneNumber" alignment="0" pref="418" max="32767" attributes="0"/>
                           <Component id="jLabel3" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="edtAddress" alignment="0" min="-2" pref="418" max="-2" attributes="0"/>
+                          <Component id="edtAddress" alignment="0" pref="418" max="32767" attributes="0"/>
                           <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="edtDateOfBirth" alignment="0" min="-2" pref="418" max="-2" attributes="0"/>
-                          <Component id="edtName" alignment="0" min="-2" pref="418" max="-2" attributes="0"/>
+                          <Component id="edtName" alignment="0" pref="418" max="32767" attributes="0"/>
                           <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="datePicker1" alignment="0" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace pref="41" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -130,7 +130,7 @@
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="edtDateOfBirth" min="-2" pref="36" max="-2" attributes="0"/>
+                              <Component id="datePicker1" min="-2" pref="36" max="-2" attributes="0"/>
                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
@@ -142,7 +142,7 @@
                           </Group>
                           <Component id="jPanel3" max="32767" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="91" max="32767" attributes="0"/>
+                      <EmptySpace pref="99" max="32767" attributes="0"/>
                   </Group>
                   <Group type="103" rootIndex="1" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="1" attributes="0">
@@ -181,18 +181,6 @@
                   <Color blue="66" green="66" red="66" type="rgb"/>
                 </Property>
                 <Property name="text" type="java.lang.String" value="Ng&#xe0;y sinh"/>
-              </Properties>
-            </Component>
-            <Component class="thethongminh.view.HintTextField" name="edtDateOfBirth">
-              <Properties>
-                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
-                  <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
-                    <LineBorder>
-                      <Color PropertyName="color" blue="e0" green="e0" red="e0" type="rgb"/>
-                    </LineBorder>
-                  </Border>
-                </Property>
-                <Property name="hint" type="java.lang.String" value="Nh&#x1ead;p ng&#xe0;y sinh"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel3">
@@ -311,6 +299,11 @@
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnInitUserDataActionPerformed"/>
               </Events>
+            </Component>
+            <Component class="com.github.lgooddatepicker.components.DatePicker" name="datePicker1">
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_AddingCodePost" type="java.lang.String" value="DatePickerSettings settings = new DatePickerSettings(new Locale(&quot;vi&quot;));&#xa;settings.setFormatForDatesCommonEra(&quot;d-M-yyyy&quot;); // &#x110;&#x1ecb;nh d&#x1ea1;ng ng&#xe0;y th&#xe1;ng n&#x103;m&#xa;settings.setAllowKeyboardEditing(false); // Kh&#xf4;ng cho ph&#xe9;p nh&#x1ead;p tay&#xa;&#xa;&#xa;datePicker1.setSettings(settings);"/>
+              </AuxValues>
             </Component>
           </SubComponents>
         </Container>

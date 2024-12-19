@@ -12,6 +12,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.List;
@@ -22,6 +23,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import javax.smartcardio.CardException;
+import javax.smartcardio.ResponseAPDU;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
@@ -36,7 +39,10 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import thethongminh.database.DataConnection;
+import thethongminh.model.Constants;
 import thethongminh.model.User;
+import thethongminh.utils.CardManager;
+import thethongminh.utils.CardUtils;
 import thethongminh.utils.ImageUtils;
 import thethongminh.view.UserInfoEditingDialog;
 
@@ -46,10 +52,13 @@ import thethongminh.view.UserInfoEditingDialog;
  */
 public class Home extends javax.swing.JFrame {
 
-    private User user = new User("Vũ Xuân Nam", "10/11/2002", "097 284 89 89", "001202037865", null);
-    private Image image;
+    private User user = new User("Vũ Xuân Nam", "10-11-2002", "HN", "0123456789", null);
     private int userMoney = 2500000;
     private boolean canEditUserInfo = false;
+    String cardId;
+
+    CardManager cardManager;
+    private static ResponseAPDU response;
 
     private int selectedRowMyTicketTable = -1;
 
@@ -58,13 +67,18 @@ public class Home extends javax.swing.JFrame {
      */
     public Home() {
         initComponents();
+        setLocationRelativeTo(null);
+
+        cardManager = CardManager.getInstance();
+        getUserData();
+
         NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
         jLabel6.setText(formatter.format(userMoney) + " VNĐ");
 
         edtName.setEditable(false);
         edtDateOfBirth.setEditable(false);
         edtPhoneNumber.setEditable(false);
-        edtIdentityCard.setEditable(false);
+        edtAddressCard.setEditable(false);
 
         if (Login.image != null) {
             jLabel4.setIcon(new ImageIcon(Login.image));
@@ -77,7 +91,8 @@ public class Home extends javax.swing.JFrame {
 
     public void setDataForTransactionHistoryTable() {
         try {
-            List<String[]> transactionHistoryData = DataConnection.fetchTransactionHistory();
+
+            List<String[]> transactionHistoryData = DataConnection.fetchTransactionHistory("001");
 
             Vector<String> columnNames = new Vector<String>();
             columnNames.add("Mã giao dịch");
@@ -250,7 +265,7 @@ public class Home extends javax.swing.JFrame {
         edtPhoneNumber = new javax.swing.JTextField();
         jPanel10 = new javax.swing.JPanel();
         jLabel9 = new javax.swing.JLabel();
-        edtIdentityCard = new javax.swing.JTextField();
+        edtAddressCard = new javax.swing.JTextField();
         panelRound5 = new thethongminh.view.PanelRound();
         jLabel4 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
@@ -278,8 +293,8 @@ public class Home extends javax.swing.JFrame {
         jLabel16 = new javax.swing.JLabel();
         jLabel19 = new javax.swing.JLabel();
         jButton4 = new javax.swing.JButton();
-        jPasswordField1 = new javax.swing.JPasswordField();
-        jPasswordField2 = new javax.swing.JPasswordField();
+        confirmPassInput = new javax.swing.JPasswordField();
+        newPassInput = new javax.swing.JPasswordField();
         jLabel6 = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
 
@@ -318,7 +333,7 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel3)
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addComponent(edtName, javax.swing.GroupLayout.Alignment.TRAILING)
         );
 
@@ -350,7 +365,7 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel5)
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addComponent(edtDateOfBirth)
                 .addContainerGap())
@@ -384,7 +399,7 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel7)
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel9Layout.createSequentialGroup()
                 .addComponent(edtPhoneNumber)
                 .addContainerGap())
@@ -395,12 +410,12 @@ public class Home extends javax.swing.JFrame {
 
         jLabel9.setFont(new java.awt.Font("Helvetica Neue", 0, 18)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(106, 106, 106));
-        jLabel9.setText("Số thẻ căn cước");
+        jLabel9.setText("Địa chỉ");
 
-        edtIdentityCard.setBackground(new java.awt.Color(244, 247, 250));
-        edtIdentityCard.setFont(new java.awt.Font("Helvetica Neue", 0, 18)); // NOI18N
-        edtIdentityCard.setText("097 207 56 32");
-        edtIdentityCard.setBorder(null);
+        edtAddressCard.setBackground(new java.awt.Color(244, 247, 250));
+        edtAddressCard.setFont(new java.awt.Font("Helvetica Neue", 0, 18)); // NOI18N
+        edtAddressCard.setText("097 207 56 32");
+        edtAddressCard.setBorder(null);
 
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
         jPanel10.setLayout(jPanel10Layout);
@@ -409,8 +424,8 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel10Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel9)
-                .addGap(158, 158, 158)
-                .addComponent(edtIdentityCard, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(238, 238, 238)
+                .addComponent(edtAddressCard, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel10Layout.setVerticalGroup(
@@ -418,9 +433,9 @@ public class Home extends javax.swing.JFrame {
             .addGroup(jPanel10Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel9)
-                .addContainerGap(11, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel10Layout.createSequentialGroup()
-                .addComponent(edtIdentityCard)
+                .addComponent(edtAddressCard)
                 .addContainerGap())
         );
 
@@ -473,7 +488,7 @@ public class Home extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(16, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jButton1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelRound5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -907,14 +922,19 @@ public class Home extends javax.swing.JFrame {
         jLabel15.setForeground(new java.awt.Color(44, 62, 80));
         jLabel15.setText("Đổi mã PIN");
 
-        jLabel16.setText("Nhập mã pin cũ");
+        jLabel16.setText("Nhập mã pin mới");
 
-        jLabel19.setText("Nhập mã pin mới");
+        jLabel19.setText("Xác nhận mã pin mới");
 
         jButton4.setBackground(new java.awt.Color(0, 123, 255));
         jButton4.setFont(new java.awt.Font("Helvetica Neue", 1, 14)); // NOI18N
         jButton4.setForeground(new java.awt.Color(255, 255, 255));
         jButton4.setText("Xác nhận");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -930,8 +950,8 @@ public class Home extends javax.swing.JFrame {
                                 .addGap(82, 82, 82)
                                 .addComponent(jLabel15))
                             .addComponent(jLabel19)
-                            .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPasswordField2, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(confirmPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(newPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(288, 288, 288))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                         .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -945,11 +965,11 @@ public class Home extends javax.swing.JFrame {
                 .addGap(28, 28, 28)
                 .addComponent(jLabel16)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPasswordField2, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(newPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jLabel19)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPasswordField1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(confirmPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(44, 44, 44)
                 .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(115, Short.MAX_VALUE))
@@ -1076,12 +1096,158 @@ public class Home extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnPayActionPerformed
 
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        char[] passInput = newPassInput.getPassword();
+        char[] confirmInput = confirmPassInput.getPassword();
+
+        String newPin = new String(passInput).trim();
+        String confirmPin = new String(confirmInput).trim();
+
+        System.out.println("newPin: " + newPin);
+        System.out.println("confirmPin: " + confirmPin);
+
+        if (newPin.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                    "Mã PIN mới không được để trống!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (confirmPin.isEmpty()) {
+            JOptionPane.showMessageDialog(null,
+                    "Mã PIN xác nhận không được để trống!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (newPin.length() != 6 || confirmPin.length() != 6) {
+            JOptionPane.showMessageDialog(null,
+                    "Mã PIN phải có đúng 6 chữ số!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!newPin.matches("\\d{6}") || !confirmPin.matches("\\d{6}")) {
+            JOptionPane.showMessageDialog(null,
+                    "Mã PIN chỉ được chứa các chữ số từ 0 đến 9!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!newPin.equals(confirmPin)) {
+            JOptionPane.showMessageDialog(null,
+                    "Mã PIN xác nhận không khớp!",
+                    "Thông báo",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+
+            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_UPDATE_PIN, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, CardUtils.convertPinToByte(newPin));
+            int sw = response.getSW();
+            System.out.println("sw UPDATE_PIN res: " + CardUtils.convertSWToHex(sw));
+            System.out.println("data UPDATE_PIN res: " + CardUtils.converBytesToHex(response.getData()));
+
+            switch (sw) {
+                case Constants.SW_INVALID_PIN_LENGTH:
+                    JOptionPane.showMessageDialog(null,
+                            "Độ dài PIN không chính xác!",
+                            "Thông báo",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                case Constants.SW_PIN_NOT_VALIDATED:
+                    JOptionPane.showMessageDialog(null,
+                            "Thẻ chưa xác thực",
+                            "Thông báo",
+                            JOptionPane.ERROR_MESSAGE);
+                    break;
+                case Constants.SW_SUCCESS:
+                    JOptionPane.showMessageDialog(null,
+                            "Mã PIN đã được cập nhật",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    break;
+                default:
+                    System.out.println("Unknown res SW");
+                    break;
+            }
+
+        } catch (CardException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    public void getUserData() {
+        try {
+            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_PRINT, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, null);
+            int sw = response.getSW();
+            byte[] resData = response.getData();
+            System.out.println("sw INS_PRINT res: " + CardUtils.convertSWToHex(sw));
+            System.out.println("data INS_PRINT res: " + CardUtils.converBytesToHex(resData));
+            if(sw == Constants.SW_SUCCESS) {
+                byte[][] splitedData = CardUtils.splitData(resData, Constants.SEPARATOR, 6);
+
+                byte[] cardIdByte = splitedData[0];
+                byte[] nameByte = splitedData[1];
+                byte[] birthdayByte = splitedData[2];
+                byte[] addressByte = splitedData[3];
+                byte[] phoneByte = splitedData[4];
+                byte[] imageLenByte = splitedData[5];
+                
+                System.out.println("sw cardIdByte res: " + CardUtils.convertBytesToStringUTF8(cardIdByte));
+                System.out.println("sw nameByte res: " + CardUtils.convertBytesToStringUTF8(nameByte));
+                System.out.println("sw birthdayByte res: " + CardUtils.convertBytesToStringUTF8(birthdayByte));
+                System.out.println("sw addressByte res: " + CardUtils.convertBytesToStringUTF8(addressByte));
+                System.out.println("sw phoneByte res: " + CardUtils.convertBytesToStringUTF8(phoneByte));
+                System.out.println("sw imageLenByte res: " + CardUtils.convertBytesToStringUTF8(imageLenByte));
+                
+                ByteBuffer buffer = ByteBuffer.wrap(imageLenByte);
+                short imageLen = buffer.getShort();
+                System.out.println("image length: " + imageLen);
+                byte[] imageByte = new byte[imageLen];  
+                int offset = 0;
+                int count = 0;
+                while(imageLen > 0) {
+                    int ne = imageLen > Constants.MAX_LENGTH ? Constants.MAX_LENGTH : imageLen;
+                    response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_PRINT, Constants.PARAM_P1_PRINT, count, ne);
+                    sw = response.getSW();
+                    if(sw == Constants.SW_SUCCESS) {
+                        System.arraycopy(response.getData(), 0, imageByte, offset, ne);
+                        offset += ne;
+                        imageLen -= ne;
+                        count++;
+                    }else {
+                        System.out.println("Error");
+                        return;
+                    }
+                }
+                System.out.println("image byte: " + CardUtils.converBytesToHex(imageByte));
+                this.user = new User(CardUtils.convertBytesToStringUTF8(nameByte),
+                            CardUtils.convertBytesToStringUTF8(birthdayByte), 
+                                CardUtils.convertBytesToStringUTF8(addressByte),
+                            CardUtils.convertBytesToStringUTF8(phoneByte),
+                            ImageUtils.byteArrayToBufferedImage(imageByte));
+            }
+
+        } catch (CardException ex) {
+            Logger.getLogger(Connect.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     public void updateUserInfo(User user) {
         this.user = user;
         edtName.setText(user.getName());
         edtDateOfBirth.setText(user.getDateOfBirth());
         edtPhoneNumber.setText(user.getPhoneNumber());
-        edtIdentityCard.setText(user.getIdentityCard());
+        edtAddressCard.setText(user.getAddress());
         if (user.getAvatar() != null) {
             jLabel4.setIcon(new ImageIcon(user.getAvatar()));
         }
@@ -1119,6 +1285,8 @@ public class Home extends javax.swing.JFrame {
         }
         //</editor-fold>
         //</editor-fold>
+        //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -1131,8 +1299,9 @@ public class Home extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancelTicket;
     private javax.swing.JButton btnPay;
+    private javax.swing.JPasswordField confirmPassInput;
+    private javax.swing.JTextField edtAddressCard;
     private javax.swing.JTextField edtDateOfBirth;
-    private javax.swing.JTextField edtIdentityCard;
     private javax.swing.JTextField edtName;
     private javax.swing.JTextField edtPhoneNumber;
     private javax.swing.JButton jButton1;
@@ -1161,8 +1330,6 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JPanel jPanel9;
-    private javax.swing.JPasswordField jPasswordField1;
-    private javax.swing.JPasswordField jPasswordField2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -1174,6 +1341,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField5;
+    private javax.swing.JPasswordField newPassInput;
     private thethongminh.view.PanelRound panelRound1;
     private thethongminh.view.PanelRound panelRound2;
     private thethongminh.view.PanelRound panelRound3;
