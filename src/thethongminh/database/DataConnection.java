@@ -89,39 +89,6 @@ public class DataConnection {
         return transactionHistory;  // Trả về danh sách lịch sử giao dịch
     }
 
-    // fetch dữ liệu lịch sử chuyến bay
-    public static List<String[]> fetchFlightHistory() throws ClassNotFoundException, SQLException {
-        List<String[]> flightHistory = new ArrayList<>();
-        String query = "SELECT * FROM chuyenbay";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
-        try (Connection connection = conn(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(query)) {
-            while (resultSet.next()) {
-                String gioDenString = resultSet.getString("gioDen");
-                LocalDateTime gioDen = LocalDateTime.parse(gioDenString, formatter);
-                // Kiểm tra nếu chuyến bay đã hoàn thành
-                if (gioDen.isBefore(now)) {
-                    String[] row = new String[]{
-                        resultSet.getString("gioDat"),
-                        resultSet.getString("gioDi"),
-                        gioDenString,
-                        resultSet.getString("diaDiemDen"),
-                        resultSet.getString("diaDiemDi"),
-                        resultSet.getString("giaVe")
-                    };
-                    flightHistory.add(row);
-                }
-            }
-        }
-
-        System.out.println("Dữ liệu lịch sử chuyến bay:");
-        for (String[] row : flightHistory) {
-            System.out.println(String.join(", ", row));
-        }
-
-        return flightHistory;
-    }
-
     public static double getBalanceByCard(String idThe) throws ClassNotFoundException, SQLException {
         double soDu = 0.0;  // Biến để lưu số dư của người dùng
         String query = "SELECT u.soDu "
@@ -212,16 +179,16 @@ public class DataConnection {
         return ticketMember;
     }
 
+    // Hàm lấy vé của thành viên từ idThe và chỉ lấy vé chưa check-in (gioCheckin = NULL)
     public static List<String[]> fetchTicketOfMember(String idThe) throws ClassNotFoundException, SQLException {
         List<String[]> ticketMember = new ArrayList<>();
         String query = "SELECT v.maVe, v.maChuyenBay, c.diemDi, c.diemDen, c.gioDi, c.gioDen, v.maSoGhe, v.giaVe "
                 + "FROM ve v "
                 + "JOIN chuyenbay c ON v.maChuyenBay = c.maChuyenBay "
                 + "JOIN card t ON v.userId = t.idUser "
-                + "WHERE t.idThe = ?";  // Lọc theo idThe
+                + "WHERE t.idThe = ? AND v.gioCheckin IS NULL";  // Thêm điều kiện gioCheckin IS NULL
 
         try (Connection connection = conn(); PreparedStatement statement = connection.prepareStatement(query)) {
-
             // Set tham số idThe vào PreparedStatement
             statement.setString(1, idThe);  // Truyền idThe vào câu truy vấn
 
@@ -494,6 +461,168 @@ public class DataConnection {
                 connection.close();
             }
         }
+    }
+
+    public static boolean checkinChuyenBay(String idThe, String maChuyenBay) {
+        Connection connection = null;
+        PreparedStatement psUpdate = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = conn();  // Thiết lập kết nối cơ sở dữ liệu
+            connection.setAutoCommit(false);  // Bắt đầu giao dịch
+
+            // Bước 1: Lấy idUser từ idThe
+            String getUserQuery = "SELECT idUser FROM card WHERE idThe = ?";
+            psUpdate = connection.prepareStatement(getUserQuery);
+            psUpdate.setString(1, idThe);
+            resultSet = psUpdate.executeQuery();
+
+            if (!resultSet.next()) {
+                System.out.println("Thẻ không hợp lệ hoặc không tồn tại.");
+                return false;  // Nếu không tìm thấy thẻ, trả về false
+            }
+
+            String idUser = resultSet.getString("idUser");  // Lấy idUser từ thẻ
+
+            // Bước 2: Cập nhật thời gian check-in
+            String sqlUpdate = "UPDATE ve SET gioCheckin = ? WHERE maChuyenBay = ? AND userId = ? AND gioCheckin IS NULL";
+
+            // Tạo PreparedStatement và thiết lập tham số
+            psUpdate = connection.prepareStatement(sqlUpdate);
+            psUpdate.setString(1, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()));
+            psUpdate.setString(2, maChuyenBay);
+            psUpdate.setString(3, idUser);
+
+            // Thực thi câu lệnh update
+            int rowsAffected = psUpdate.executeUpdate();
+
+            if (rowsAffected > 0) {
+                connection.commit();  // Commit giao dịch nếu cập nhật thành công
+                System.out.println("Check in thành công: " + rowsAffected);
+                return true;  // Check-in thành công
+            } else {
+                connection.rollback();  // Rollback giao dịch nếu không có dòng nào được cập nhật
+                System.out.println("Không tìm thấy chuyến bay hoặc vé để check-in.");
+                return false; // Không có vé nào để check-in hoặc không tìm thấy chuyến bay/vé tương ứng
+            }
+
+        } catch (SQLException e) {
+            try {
+                if (connection != null) {
+                    connection.rollback();  // Rollback nếu xảy ra lỗi
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+            return false; // Lỗi xảy ra trong quá trình thực thi
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(DataConnection.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        } finally {
+            // Đóng tài nguyên
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (psUpdate != null) {
+                    psUpdate.close();
+                }
+                if (connection != null) {
+                    connection.setAutoCommit(true);  // Đặt lại auto commit về mặc định sau khi giao dịch kết thúc
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Hàm lấy lịch sử chuyến bay của user từ idThe
+    public static List<String[]> getFlightHistory(String idThe) {
+        Connection connection = null;
+        List<String[]> flightHistory = new ArrayList<>();
+        PreparedStatement psGetUser = null;
+        PreparedStatement psGetFlights = null;
+        ResultSet resultSetUser = null;
+        ResultSet resultSetFlights = null;
+
+        try {
+            connection = conn();  // Thiết lập kết nối cơ sở dữ liệu
+
+            // Bước 1: Lấy idUser từ thẻ
+            String getUserQuery = "SELECT idUser FROM card WHERE idThe = ?";
+            psGetUser = connection.prepareStatement(getUserQuery);
+            psGetUser.setString(1, idThe);
+            resultSetUser = psGetUser.executeQuery();
+
+            if (!resultSetUser.next()) {
+                System.out.println("Thẻ không hợp lệ hoặc không tồn tại.");
+                return flightHistory;  // Trả về danh sách rỗng nếu không tìm thấy thẻ
+            }
+
+            String idUser = resultSetUser.getString("idUser");  // Lấy idUser từ thẻ
+
+            // Bước 2: Truy vấn thông tin các vé của user đã check-in
+            String getFlightsQuery = "SELECT v.maVe, v.maChuyenBay, v.maSoGhe, v.gioCheckin, "
+                    + "c.diemDi, c.diemDen, c.gioDi, c.gioDen "
+                    + "FROM ve v "
+                    + "JOIN chuyenbay c ON v.maChuyenBay = c.maChuyenBay "
+                    + "WHERE v.userId = ? AND v.gioCheckin IS NOT NULL";
+
+            psGetFlights = connection.prepareStatement(getFlightsQuery);
+            psGetFlights.setString(1, idUser);
+            resultSetFlights = psGetFlights.executeQuery();
+
+            // Bước 3: Lấy dữ liệu chuyến bay
+            while (resultSetFlights.next()) {
+                String maVe = resultSetFlights.getString("maVe");
+                String maChuyenBay = resultSetFlights.getString("maChuyenBay");
+                String diemDi = resultSetFlights.getString("diemDi");
+                String diemDen = resultSetFlights.getString("diemDen");
+                String gioDi = resultSetFlights.getString("gioDi");
+                String gioDen = resultSetFlights.getString("gioDen");
+                String maSoGhe = resultSetFlights.getString("maSoGhe");
+                String gioCheckin = resultSetFlights.getString("gioCheckin");
+
+                // Thêm thông tin chuyến bay vào danh sách kết quả dưới dạng mảng String
+                String[] flightDetails = new String[]{
+                    maVe,
+                    maChuyenBay,
+                    diemDi,
+                    diemDen,
+                    gioDi,
+                    gioDen,
+                    maSoGhe,
+                    gioCheckin
+                };
+                flightHistory.add(flightDetails);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+        } finally {
+            // Đóng các tài nguyên trong finally để đảm bảo chúng luôn được đóng
+            try {
+                if (resultSetUser != null) {
+                    resultSetUser.close();
+                }
+                if (resultSetFlights != null) {
+                    resultSetFlights.close();
+                }
+                if (psGetUser != null) {
+                    psGetUser.close();
+                }
+                if (psGetFlights != null) {
+                    psGetFlights.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return flightHistory;
     }
 
     public static int addUser(User user) {

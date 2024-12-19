@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.SQLException;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
@@ -30,6 +31,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -62,6 +64,7 @@ public class Home extends javax.swing.JFrame {
 
     private int selectedRowMyTicketTable = -1;
     private int selectedRowTicketTable = -1;
+    private int selectedRowFlightTable = -1;
 
     /**
      * Creates new form MainFrame
@@ -135,44 +138,38 @@ public class Home extends javax.swing.JFrame {
     }
 
     public void setDataForFlightHistoryTable() {
-        try {
-            List<String[]> flightHistoryData = DataConnection.fetchFlightHistory();
-
-            Vector<String> columnNames = new Vector<String>();
-            columnNames.add("Giờ đặt");
-            columnNames.add("Giờ đi");
-            columnNames.add("Giờ đến");
-            columnNames.add("Điểm đến");
-            columnNames.add("Điểm đi");
-            columnNames.add("Giá vé");
-
-            Vector<Vector<String>> data = new Vector<Vector<String>>();
-            for (int i = 0; i < flightHistoryData.size(); i++) {
-                String[] item = flightHistoryData.get(i);
-                Vector<String> row = new Vector<String>();
-                row.add(item[0]);
-                row.add(item[1]);
-                row.add(item[2]);
-                row.add(item[3]);
-                row.add(item[4]);
-                row.add(item[5]);
-                data.add(row);
+        List<String[]> flightHistoryData = DataConnection.getFlightHistory("001");
+        Vector<String> columnNames = new Vector<String>();
+        columnNames.add("Mã vé");
+        columnNames.add("Mã chuyến bay");
+        columnNames.add("Điểm đi");
+        columnNames.add("Điểm đến");
+        columnNames.add("Giờ đi");
+        columnNames.add("Giờ đến");
+        columnNames.add("Mã số ghế");
+        columnNames.add("Giờ check in");
+        Vector<Vector<String>> data = new Vector<Vector<String>>();
+        for (int i = 0; i < flightHistoryData.size(); i++) {
+            String[] item = flightHistoryData.get(i);
+            Vector<String> row = new Vector<String>();
+            row.add(item[0]);
+            row.add(item[1]);
+            row.add(item[2]);
+            row.add(item[3]);
+            row.add(item[4]);
+            row.add(item[5]);
+            row.add(item[6]);
+            row.add(item[7]);
+            data.add(row);
+        }
+        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
             }
-
-            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
-                @Override
-                public boolean isCellEditable(int row, int column) {
-                    return false;
-                }
-            };
-
-            if (jTableFlightHistory != null) {
-                jTableFlightHistory.setModel(tableModel);
-            };
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
-            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        };
+        if (jTableFlightHistory != null) {
+            jTableFlightHistory.setModel(tableModel);
         }
     }
 
@@ -208,6 +205,20 @@ public class Home extends javax.swing.JFrame {
 
             if (jTableMyTicket2 != null) {
                 jTableMyTicket2.setModel(tableModel);
+                jTableMyTicket2.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent event) {
+                        if (event.getButton() != MouseEvent.BUTTON1) {
+                            return;
+                        }
+                        if (event.getClickCount() == 1) {
+                            Point pnt = event.getPoint();
+                            int row = jTableMyTicket2.rowAtPoint(pnt);
+                            selectedRowFlightTable = row;
+                            return;
+                        }
+                    }
+                });
             };
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
@@ -408,6 +419,8 @@ public class Home extends javax.swing.JFrame {
         jButton4 = new javax.swing.JButton();
         confirmPassInput = new javax.swing.JPasswordField();
         newPassInput = new javax.swing.JPasswordField();
+        jLabel17 = new javax.swing.JLabel();
+        oldPassInput = new javax.swing.JPasswordField();
         jLabel6 = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
 
@@ -1391,33 +1404,41 @@ public class Home extends javax.swing.JFrame {
             }
         });
 
+        jLabel17.setText("Nhập mã pin cũ");
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap(331, Short.MAX_VALUE)
+                .addContainerGap(327, Short.MAX_VALUE)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                        .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(413, 413, 413))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel16)
-                            .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addGap(82, 82, 82)
-                                .addComponent(jLabel15))
                             .addComponent(jLabel19)
                             .addComponent(confirmPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(newPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(288, 288, 288))
+                            .addComponent(newPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel17)
+                            .addComponent(oldPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(292, 292, 292))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                        .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(414, 414, 414))))
+                        .addComponent(jLabel15)
+                        .addGap(398, 398, 398))))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
-                .addGap(60, 60, 60)
+                .addGap(40, 40, 40)
                 .addComponent(jLabel15)
-                .addGap(28, 28, 28)
+                .addGap(32, 32, 32)
+                .addComponent(jLabel17)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(oldPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 19, Short.MAX_VALUE)
                 .addComponent(jLabel16)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(newPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1425,9 +1446,9 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jLabel19)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(confirmPassInput, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(44, 44, 44)
+                .addGap(34, 34, 34)
                 .addComponent(jButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(115, Short.MAX_VALUE))
+                .addGap(63, 63, 63))
         );
 
         jTabbedPane1.addTab("Mã pin", jPanel5);
@@ -1502,6 +1523,9 @@ public class Home extends javax.swing.JFrame {
                             JOptionPane.WARNING_MESSAGE);
                     return;
                 }
+                String maPin = showConfirmPinDialog();
+
+                // xác thực mã pin ở đây
                 DataConnection.rechargeMoney("001", amount);
                 updateMoneyUI();
                 setDataForTransactionHistoryTable();
@@ -1520,9 +1544,12 @@ public class Home extends javax.swing.JFrame {
     private void btnCancelTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelTicketActionPerformed
         if (selectedRowMyTicketTable > -1) {
             try {
+                String maPin = showConfirmPinDialog();
+
+                // xác thực mã pin ở đây
                 String maVe = jTableMyTicket.getValueAt(selectedRowMyTicketTable, 0).toString();
                 boolean isSuccessfully = DataConnection.cancelTicket("001", maVe);
-                
+
                 if (isSuccessfully) {
                     JOptionPane.showMessageDialog(null,
                             "Hủy vé thành công",
@@ -1635,6 +1662,9 @@ public class Home extends javax.swing.JFrame {
 
     private void btnBookTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBookTicketActionPerformed
         if (selectedRowTicketTable > -1) {
+            String maPin = showConfirmPinDialog();
+
+            // xác thực mã pin ở đây
             try {
                 String maVe = jTableMyTicket1.getValueAt(selectedRowTicketTable, 0).toString();
                 boolean isSuccessfully = DataConnection.bookTicket("001", maVe);
@@ -1665,7 +1695,27 @@ public class Home extends javax.swing.JFrame {
     }//GEN-LAST:event_btnBookTicketActionPerformed
 
     private void btnCheckinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckinActionPerformed
-        // TODO add your handling code here:
+        if (selectedRowFlightTable > -1) {
+            String maPin = showConfirmPinDialog();
+
+            // xác thực mã pin ở đây
+            String maCb = jTableMyTicket2.getValueAt(selectedRowFlightTable, 0).toString();
+            boolean isSuccessfully = DataConnection.checkinChuyenBay("001", maCb);
+            if (isSuccessfully) {
+                JOptionPane.showMessageDialog(null,
+                        "Check in thành công",
+                        "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE);
+                setDataForMyTicketTable();
+                setDataForFlightHistoryTable();
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Check in thất bại",
+                        "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+            selectedRowFlightTable = -1;
+        }
     }//GEN-LAST:event_btnCheckinActionPerformed
 
     public void getUserData() {
@@ -1726,6 +1776,17 @@ public class Home extends javax.swing.JFrame {
 //            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 
+    }
+
+    private String showConfirmPinDialog() {
+        JPasswordField edtPin = new JPasswordField();
+        final JComponent[] inputs = new JComponent[]{
+            new JLabel("Nhập mã pin"), edtPin,};
+        int result = JOptionPane.showConfirmDialog(null, inputs, "Mã pin", JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            return Arrays.toString(edtPin.getPassword());
+        }
+        return "";
     }
 
     public void updateUserInfo(User user) {
@@ -1803,6 +1864,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel21;
@@ -1848,6 +1910,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField6;
     private javax.swing.JTextField jTextField7;
     private javax.swing.JPasswordField newPassInput;
+    private javax.swing.JPasswordField oldPassInput;
     private thethongminh.view.PanelRound panelRound1;
     private thethongminh.view.PanelRound panelRound2;
     private thethongminh.view.PanelRound panelRound3;
