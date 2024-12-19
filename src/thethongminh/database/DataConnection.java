@@ -6,9 +6,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.*;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,32 +56,37 @@ public class DataConnection {
         }
     }
 
-    public static List<String[]> fetchTransactionHistory(String cardId) throws ClassNotFoundException, SQLException {
-        List<String[]> transHistory = new ArrayList<>();
-        String query = "SELECT * FROM giaodich WHERE idThe  = ?";
+    public static List<String[]> getTransactionHistoryByCardId(String idThe) throws ClassNotFoundException, SQLException {
+        List<String[]> transactionHistory = new ArrayList<>();
+        String query = "SELECT idGiaoDich, idThe, time, soTien, loai, maVe FROM giaodich WHERE idThe = ?";
 
-        Connection connection = conn();
-        PreparedStatement statement = connection.prepareStatement(query);
-        statement.setString(1, cardId);
-        ResultSet resultSet = statement.executeQuery();
+        try (Connection connection = conn(); // Kết nối cơ sở dữ liệu
+                 PreparedStatement statement = connection.prepareStatement(query)) {  // Sử dụng PreparedStatement để tránh SQL injection
+            statement.setString(1, idThe);  // Đặt giá trị idThe vào câu truy vấn
 
-        while (resultSet.next()) {
-            String[] row = new String[]{
-                resultSet.getString("idGiaoDich"),
-                resultSet.getString("idThe"),
-                resultSet.getString("time"),
-                resultSet.getString("soTien"),
-                resultSet.getString("loai"),
-                resultSet.getString("maVeDaDat")
-            };
-            transHistory.add(row);
+            try (ResultSet resultSet = statement.executeQuery()) {  // Thực thi truy vấn
+                while (resultSet.next()) {
+                    // Lấy từng dòng kết quả từ ResultSet
+                    String[] row = new String[]{
+                        resultSet.getString("idGiaoDich"), // Lấy idGiaoDich
+                        resultSet.getString("idThe"), // Lấy idThe
+                        resultSet.getString("time"), // Lấy time
+                        resultSet.getString("soTien"), // Lấy soTien
+                        resultSet.getString("loai"), // Lấy loai giao dịch
+                        resultSet.getString("maVe") // Lấy maVe (nếu có)
+                    };
+                    transactionHistory.add(row);  // Thêm dòng vào danh sách
+                }
+            }
         }
 
-        System.out.println("Dữ liệu lịch sử giao dịch:");
-        for (String[] row : transHistory) {
+        // In ra lịch sử giao dịch để kiểm tra
+        System.out.println("Lịch sử giao dịch của thẻ " + idThe + ":");
+        for (String[] row : transactionHistory) {
             System.out.println(String.join(", ", row));
         }
-        return transHistory;
+
+        return transactionHistory;  // Trả về danh sách lịch sử giao dịch
     }
 
     // fetch dữ liệu lịch sử chuyến bay
@@ -88,7 +95,7 @@ public class DataConnection {
         String query = "SELECT * FROM chuyenbay";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
-        try ( Connection connection = conn();  Statement statement = connection.createStatement();  ResultSet resultSet = statement.executeQuery(query)) {
+        try (Connection connection = conn(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(query)) {
             while (resultSet.next()) {
                 String gioDenString = resultSet.getString("gioDen");
                 LocalDateTime gioDen = LocalDateTime.parse(gioDenString, formatter);
@@ -115,140 +122,377 @@ public class DataConnection {
         return flightHistory;
     }
 
-    public static List<String[]> fetchTicketOfMember() throws ClassNotFoundException, SQLException {
-        List<String[]> ticketMember = new ArrayList<>();
-        String query = "SELECT * FROM vedadat";
-        try ( Connection connection = conn();  Statement statement = connection.createStatement();  ResultSet resultSet = statement.executeQuery(query)) {
+    public static double getBalanceByCard(String idThe) throws ClassNotFoundException, SQLException {
+        double soDu = 0.0;  // Biến để lưu số dư của người dùng
+        String query = "SELECT u.soDu "
+                + "FROM user u "
+                + "JOIN card c ON u.idUser = c.idUser "
+                + "WHERE c.idThe = ?";  // Lọc theo mã thẻ (idThe)
+
+        try (Connection connection = conn(); // Kết nối với cơ sở dữ liệu
+                 PreparedStatement statement = connection.prepareStatement(query)) {
+
+            // Gán giá trị idThe vào PreparedStatement
+            statement.setString(1, idThe);  // Thay thế tham số ? với idThe
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    // Lấy giá trị số dư từ ResultSet
+                    soDu = resultSet.getDouble("soDu");
+                }
+            }
+        }
+
+        // Trả về số dư của người dùng
+        return soDu;
+    }
+
+    public static List<String[]> fetchAllFlights() throws ClassNotFoundException, SQLException {
+        List<String[]> flights = new ArrayList<>();
+        String query = "SELECT maChuyenBay, diemDi, diemDen, gioDi, gioDen FROM chuyenbay";  // Lấy tất cả chuyến bay
+
+        try (Connection connection = conn(); // Kết nối với cơ sở dữ liệu
+                 Statement statement = connection.createStatement(); // Tạo Statement để thực thi câu lệnh SQL
+                 ResultSet resultSet = statement.executeQuery(query)) {  // Thực thi câu lệnh và lấy kết quả
+
+            // Duyệt qua tất cả kết quả trong ResultSet
             while (resultSet.next()) {
+                // Lấy các giá trị từ ResultSet và lưu vào mảng String[]
                 String[] row = new String[]{
-                    resultSet.getString("maVeDaDat"),
+                    resultSet.getString("maChuyenBay"),
+                    resultSet.getString("diemDi"),
+                    resultSet.getString("diemDen"),
+                    resultSet.getString("gioDi"),
+                    resultSet.getString("gioDen")
+                };
+                flights.add(row);  // Thêm vào danh sách flights
+            }
+        }
+
+        // In dữ liệu các chuyến bay
+        System.out.println("Danh sách tất cả các chuyến bay:");
+        for (String[] row : flights) {
+            System.out.println(String.join(", ", row));  // In ra từng chuyến bay
+        }
+
+        return flights;  // Trả về danh sách các chuyến bay
+    }
+
+    public static List<String[]> fetchTickets() throws ClassNotFoundException, SQLException {
+        List<String[]> ticketMember = new ArrayList<>();
+        String query = "SELECT v.maVe, v.maChuyenBay, c.diemDi, c.diemDen, c.gioDi, c.gioDen, v.maSoGhe, v.giaVe "
+                + "FROM ve v "
+                + "JOIN chuyenbay c ON v.maChuyenBay = c.maChuyenBay "
+                + "WHERE v.userId IS NULL";  // Lọc theo userId là NULL
+
+        try (Connection connection = conn(); Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(query)) {
+
+            while (resultSet.next()) {
+                // Tạo một mảng String để lưu các giá trị từ ResultSet
+                String[] row = new String[]{
                     resultSet.getString("maVe"),
-                    resultSet.getString("maCB"),
-                    resultSet.getString("idUser"),
-                    resultSet.getString("soLuongDat"),
-                    resultSet.getString("tongThanhToan"),
-                    resultSet.getBoolean("daThanhToan") ? "Đã thanh toán" : "Chưa thanh toán"
+                    resultSet.getString("maChuyenBay"),
+                    resultSet.getString("diemDi"),
+                    resultSet.getString("diemDen"),
+                    resultSet.getString("gioDi"),
+                    resultSet.getString("gioDen"),
+                    resultSet.getString("maSoGhe"),
+                    resultSet.getString("giaVe")
                 };
                 ticketMember.add(row);
             }
         }
+
+        // In dữ liệu vé không có userId
+        System.out.println("Dữ liệu vé không có userId:");
+        for (String[] row : ticketMember) {
+            System.out.println(String.join(", ", row));
+        }
+
+        return ticketMember;
+    }
+
+    public static List<String[]> fetchTicketOfMember(String idThe) throws ClassNotFoundException, SQLException {
+        List<String[]> ticketMember = new ArrayList<>();
+        String query = "SELECT v.maVe, v.maChuyenBay, c.diemDi, c.diemDen, c.gioDi, c.gioDen, v.maSoGhe, v.giaVe "
+                + "FROM ve v "
+                + "JOIN chuyenbay c ON v.maChuyenBay = c.maChuyenBay "
+                + "JOIN card t ON v.userId = t.idUser "
+                + "WHERE t.idThe = ?";  // Lọc theo idThe
+
+        try (Connection connection = conn(); PreparedStatement statement = connection.prepareStatement(query)) {
+
+            // Set tham số idThe vào PreparedStatement
+            statement.setString(1, idThe);  // Truyền idThe vào câu truy vấn
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    // Tạo một mảng String để lưu các giá trị từ ResultSet
+                    String[] row = new String[]{
+                        resultSet.getString("maVe"),
+                        resultSet.getString("maChuyenBay"),
+                        resultSet.getString("diemDi"),
+                        resultSet.getString("diemDen"),
+                        resultSet.getString("gioDi"),
+                        resultSet.getString("gioDen"),
+                        resultSet.getString("maSoGhe"),
+                        resultSet.getString("giaVe")
+                    };
+                    ticketMember.add(row);
+                }
+            }
+        }
+
+        // In dữ liệu vé của người dùng
         System.out.println("Dữ liệu vé của tôi:");
         for (String[] row : ticketMember) {
             System.out.println(String.join(", ", row));
         }
+
         return ticketMember;
     }
 
-    public static void payTicket(String maVeDaDat, String idThe, double soTien) throws ClassNotFoundException, SQLException {
-        // Sử dụng PreparedStatement để tránh SQL Injection
-        String query = "UPDATE vedadat SET daThanhToan = 1 WHERE maVeDaDat = ?";
-        String insertQuery = "INSERT INTO giaodich (idThe, time, soTien, loai, maVeDaDat) VALUES (?, ?, ?, ?, ?)";
+    public static boolean bookTicket(String idThe, String maVe) throws ClassNotFoundException, SQLException {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
 
-        try ( Connection connection = conn();  PreparedStatement statement = connection.prepareStatement(query);  PreparedStatement insertStatement = connection.prepareStatement(insertQuery)) {
-            // Thiết lập giá trị cho tham số trong câu lệnh SQL
-            statement.setString(1, maVeDaDat);
+        try {
+            connection = conn();  // Thiết lập kết nối cơ sở dữ liệu
 
-            // Thực thi câu lệnh UPDATE
-            int rowsAffected = statement.executeUpdate();
+            // Bắt đầu transaction để đảm bảo tính toàn vẹn của dữ liệu
+            connection.setAutoCommit(false);
 
-            if (rowsAffected > 0) {
-                System.out.println("Thanh toán thành công cho mã vé " + maVeDaDat);
+            // Lấy idUser từ idThe
+            String getUserQuery = "SELECT idUser FROM card WHERE idThe = ?";
+            statement = connection.prepareStatement(getUserQuery);
+            statement.setString(1, idThe);
+            resultSet = statement.executeQuery();
 
-                // Lấy thời gian hiện tại
-                Timestamp currentTime = Timestamp.valueOf(LocalDateTime.now());
+            if (!resultSet.next()) {
+                // Nếu không tìm thấy userId với idThe, trả về false
+                System.out.println("Thẻ không hợp lệ hoặc không tồn tại.");
+                return false;
+            }
 
-                // Set các tham số cho câu lệnh INSERT
-                insertStatement.setString(1, idThe);  // id thẻ
-                insertStatement.setTimestamp(2, currentTime);  // thời gian giao dịch
-                insertStatement.setDouble(3, soTien);  // số tiền thanh toán
-                insertStatement.setString(4, "Mua vé");  // loại giao dịch
-                insertStatement.setString(5, maVeDaDat);  // mã vé đã đặt
+            String idUser = resultSet.getString("idUser");  // Lấy idUser từ thẻ
 
-                // Thực thi câu lệnh INSERT
-                int insertResult = insertStatement.executeUpdate();
-                if (insertResult > 0) {
-                    System.out.println("Thông tin giao dịch đã được ghi lại vào bảng giaodich.");
-                } else {
-                    System.out.println("Không thể ghi thông tin vào bảng giaodich.");
-                }
-            } else {
-                System.out.println("Không tìm thấy mã vé " + maVeDaDat);
+            // Lấy thông tin vé (giaVe) từ bảng ve
+            String getTicketQuery = "SELECT maVe, giaVe FROM ve WHERE maVe = ? AND userId IS NULL"; // Lọc vé chưa có userId
+            statement = connection.prepareStatement(getTicketQuery);
+            statement.setString(1, maVe);
+            resultSet = statement.executeQuery();
+
+            if (!resultSet.next()) {
+                // Nếu vé đã có người đặt hoặc không tồn tại
+                System.out.println("Vé không còn hoặc đã được đặt.");
+                return false;
+            }
+
+            // Lấy giá vé của vé cần đặt
+            double giaVe = resultSet.getDouble("giaVe");
+
+            // Cập nhật bảng vé, gán userId cho vé
+            String bookTicketQuery = "UPDATE ve SET userId = ? WHERE maVe = ?";
+            statement = connection.prepareStatement(bookTicketQuery);
+            statement.setString(1, idUser);
+            statement.setString(2, maVe);
+            statement.executeUpdate();  // Cập nhật userId cho vé
+
+            // Cập nhật số dư của người dùng
+            String updateBalanceQuery = "UPDATE user SET soDu = soDu - ? WHERE idUser = ?";
+            statement = connection.prepareStatement(updateBalanceQuery);
+            statement.setDouble(1, giaVe);
+            statement.setString(2, idUser);
+            statement.executeUpdate();  // Cập nhật số dư người dùng
+
+            // Thêm giao dịch vào bảng giaodich
+            String addTransactionQuery = "INSERT INTO giaodich (idThe, time, soTien, loai, maVe) VALUES (?, ?, ?, ?, ?)";
+            statement = connection.prepareStatement(addTransactionQuery);
+            statement.setString(1, idThe);  // Mã thẻ
+            statement.setString(2, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()));  // Thời gian hiện tại
+            statement.setDouble(3, giaVe);  // Số tiền giao dịch
+            statement.setString(4, "Đặt vé");  // Loại giao dịch
+            statement.setString(5, maVe);  // Mã vé
+            statement.executeUpdate();  // Thực hiện thêm giao dịch
+
+            // Commit transaction để lưu tất cả thay đổi vào cơ sở dữ liệu
+            connection.commit();
+
+            System.out.println("Đặt vé thành công.");
+            return true;  // Đặt vé thành công
+        } catch (SQLException e) {
+            if (connection != null) {
+                // Rollback nếu có lỗi
+                connection.rollback();
+            }
+            e.printStackTrace();
+            return false;  // Xử lý lỗi nếu có
+        } finally {
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null) {
+                connection.setAutoCommit(true);  // Quay lại chế độ tự động commit
+                connection.close();
             }
         }
     }
 
-    // Hàm hủy vé - Xóa giao dịch trong bảng giaodich trước rồi xóa vé trong bảng vedadat
-    public static void cancelTicket(String maVeDaDat) {
-        String deleteTransactionQuery = "DELETE FROM giaodich WHERE maVeDaDat = ?";
-        String deleteTicketQuery = "DELETE FROM vedadat WHERE maVeDaDat = ?";
+    public static boolean cancelTicket(String idThe, String maVe) throws ClassNotFoundException, SQLException {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
 
-        try ( Connection connection = conn();  PreparedStatement deleteTransactionStatement = connection.prepareStatement(deleteTransactionQuery);  PreparedStatement deleteTicketStatement = connection.prepareStatement(deleteTicketQuery)) {
+        try {
+            connection = conn();  // Thiết lập kết nối cơ sở dữ liệu
+            connection.setAutoCommit(false);  // Bắt đầu giao dịch
 
-            // Bước 1: Xóa giao dịch liên quan đến vé trong bảng giaodich
-            deleteTransactionStatement.setString(1, maVeDaDat);
-            int transactionDeleteResult = deleteTransactionStatement.executeUpdate();
+            // Bước 1: Lấy idUser từ idThe
+            String getUserQuery = "SELECT idUser FROM card WHERE idThe = ?";
+            statement = connection.prepareStatement(getUserQuery);
+            statement.setString(1, idThe);
+            resultSet = statement.executeQuery();
 
-            if (transactionDeleteResult > 0) {
-                System.out.println("Giao dịch liên quan đến mã vé " + maVeDaDat + " đã được xóa.");
-            } else {
-                System.out.println("Không tìm thấy giao dịch với mã vé " + maVeDaDat);
+            if (!resultSet.next()) {
+                System.out.println("Thẻ không hợp lệ hoặc không tồn tại.");
+                return false;  // Nếu không tìm thấy thẻ, trả về false
             }
 
-            // Bước 2: Xóa vé trong bảng vedadat
-            deleteTicketStatement.setString(1, maVeDaDat);
-            int ticketDeleteResult = deleteTicketStatement.executeUpdate();
+            String idUser = resultSet.getString("idUser");  // Lấy idUser từ thẻ
 
-            if (ticketDeleteResult > 0) {
-                System.out.println("Vé " + maVeDaDat + " đã được xóa khỏi bảng vedadat.");
-            } else {
-                System.out.println("Không tìm thấy vé với mã " + maVeDaDat);
+            // Bước 2: Kiểm tra xem vé có thuộc về người dùng này không (bảng ve)
+            String getTicketQuery = "SELECT maVe, giaVe, userId FROM ve WHERE maVe = ? AND userId = ?";
+            statement = connection.prepareStatement(getTicketQuery);
+            statement.setString(1, maVe);
+            statement.setString(2, idUser);  // Kiểm tra vé có thuộc về người dùng này không
+            resultSet = statement.executeQuery();
+
+            if (!resultSet.next()) {
+                System.out.println("Vé không tồn tại hoặc không thuộc về người dùng này.");
+                return false;  // Nếu vé không thuộc về người dùng hoặc không tồn tại
             }
-        } catch (SQLException | ClassNotFoundException e) {
-            System.out.println("Lỗi khi hủy vé: " + e.getMessage());
+
+            // Bước 3: Lấy giá vé và hủy vé
+            double giaVe = resultSet.getDouble("giaVe");
+
+            // Cập nhật bảng vé: Hủy vé bằng cách đặt userId = NULL
+            String cancelTicketQuery = "UPDATE ve SET userId = NULL WHERE maVe = ? AND userId = ?";
+            statement = connection.prepareStatement(cancelTicketQuery);
+            statement.setString(1, maVe);
+            statement.setString(2, idUser);
+            statement.executeUpdate();  // Cập nhật vé để hủy
+
+            // Bước 4: Trả lại tiền cho người dùng (cập nhật số dư trong bảng user)
+            String updateBalanceQuery = "UPDATE user SET soDu = soDu + ? WHERE idUser = ?";
+            statement = connection.prepareStatement(updateBalanceQuery);
+            statement.setDouble(1, giaVe);  // Cộng tiền vào số dư người dùng
+            statement.setString(2, idUser);
+            statement.executeUpdate();  // Cập nhật số dư người dùng
+
+            // Bước 5: Thêm giao dịch vào bảng giaodich (loại "Hủy vé")
+            String addTransactionQuery = "INSERT INTO giaodich (idThe, time, soTien, loai, maVe) VALUES (?, ?, ?, ?, ?)";
+            statement = connection.prepareStatement(addTransactionQuery);
+            statement.setString(1, idThe);  // Mã thẻ
+            statement.setString(2, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()));  // Thời gian hiện tại
+            statement.setDouble(3, giaVe);  // Số tiền giao dịch (giá vé)
+            statement.setString(4, "Hủy vé");  // Loại giao dịch là "Hủy vé"
+            statement.setString(5, maVe);  // Mã vé
+            statement.executeUpdate();  // Thực hiện thêm giao dịch
+
+            // Commit transaction để lưu tất cả thay đổi vào cơ sở dữ liệu
+            connection.commit();
+
+            System.out.println("Hủy vé thành công và đã hoàn tiền.");
+            return true;  // Hủy vé thành công
+        } catch (SQLException e) {
+            if (connection != null) {
+                // Rollback nếu có lỗi
+                connection.rollback();
+            }
+            e.printStackTrace();
+            return false;  // Nếu có lỗi, trả về false
+        } finally {
+            // Đảm bảo đóng kết nối và các tài nguyên
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null) {
+                connection.setAutoCommit(true);  // Quay lại chế độ tự động commit
+                connection.close();
+            }
         }
     }
 
-    // Hàm nạp tiền vào tài khoản
-    public static void topupMoney(String userId, String idThe, int topupAmount) {
-        // Sử dụng PreparedStatement để tránh SQL Injection
-        String query = "UPDATE user SET soDu = soDu + ? WHERE idUser = ?";
-        String insertQuery = "INSERT INTO giaodich (idThe, time, soTien, loai) VALUES (?, ?, ?, ?)";
+    public static boolean rechargeMoney(String idThe, double amount) throws ClassNotFoundException, SQLException {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
 
-        try ( Connection connection = conn();  PreparedStatement statement = connection.prepareStatement(query);  PreparedStatement insertStatement = connection.prepareStatement(insertQuery)) {
+        try {
+            connection = conn();  // Thiết lập kết nối cơ sở dữ liệu
+            connection.setAutoCommit(false);  // Bắt đầu giao dịch
 
-            // Thiết lập giá trị cho câu lệnh UPDATE (cộng thêm số tiền nạp vào tài khoản người dùng)
-            statement.setInt(1, topupAmount);  // Số tiền nạp
-            statement.setString(2, userId);    // Mã người dùng
+            // Bước 1: Lấy idUser từ idThe
+            String getUserQuery = "SELECT idUser FROM card WHERE idThe = ?";
+            statement = connection.prepareStatement(getUserQuery);
+            statement.setString(1, idThe);
+            resultSet = statement.executeQuery();
 
-            // Thực thi câu lệnh UPDATE
-            int rowsAffected = statement.executeUpdate();
-
-            if (rowsAffected > 0) {
-                System.out.println("Nạp tiền thành công cho người dùng " + userId);
-
-                // Lấy thời gian hiện tại
-                Timestamp currentTime = Timestamp.valueOf(LocalDateTime.now());
-
-                // Set các tham số cho câu lệnh INSERT (ghi lại giao dịch nạp tiền)
-                insertStatement.setString(1, idThe);       // ID thẻ
-                insertStatement.setTimestamp(2, currentTime); // Thời gian giao dịch
-                insertStatement.setInt(3, topupAmount);    // Số tiền nạp
-                insertStatement.setString(4, "Nạp tiền"); // Loại giao dịch
-
-                // Thực thi câu lệnh INSERT
-                int insertResult = insertStatement.executeUpdate();
-                if (insertResult > 0) {
-                    System.out.println("Thông tin giao dịch đã được ghi lại vào bảng giaodich.");
-                } else {
-                    System.out.println("Không thể ghi thông tin vào bảng giaodich.");
-                }
-            } else {
-                System.out.println("Không tìm thấy người dùng với ID " + userId);
+            if (!resultSet.next()) {
+                System.out.println("Thẻ không hợp lệ hoặc không tồn tại.");
+                return false;  // Nếu không tìm thấy thẻ, trả về false
             }
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(DataConnection.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
-            Logger.getLogger(DataConnection.class.getName()).log(Level.SEVERE, null, ex);
+
+            String idUser = resultSet.getString("idUser");  // Lấy idUser từ thẻ
+
+            // Bước 2: Cập nhật số dư người dùng trong bảng user
+            String updateBalanceQuery = "UPDATE user SET soDu = soDu + ? WHERE idUser = ?";
+            statement = connection.prepareStatement(updateBalanceQuery);
+            statement.setDouble(1, amount);  // Cộng số tiền vào số dư người dùng
+            statement.setString(2, idUser);
+            statement.executeUpdate();  // Cập nhật số dư người dùng
+
+            // Bước 3: Thêm giao dịch vào bảng giaodich
+            String addTransactionQuery = "INSERT INTO giaodich (idThe, time, soTien, loai, maVe) VALUES (?, ?, ?, ?, ?)";
+            statement = connection.prepareStatement(addTransactionQuery);
+            statement.setString(1, idThe);  // Mã thẻ
+            statement.setString(2, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Calendar.getInstance().getTime()));  // Thời gian hiện tại
+            statement.setDouble(3, amount);  // Số tiền giao dịch
+            statement.setString(4, "Nạp tiền");  // Loại giao dịch là "Nạp tiền"
+            statement.setString(5, null);  // `maVe` là null vì đây là giao dịch nạp tiền
+            statement.executeUpdate();  // Thực hiện thêm giao dịch
+
+            // Commit transaction để lưu tất cả thay đổi vào cơ sở dữ liệu
+            connection.commit();
+
+            System.out.println("Nạp tiền thành công.");
+            return true;  // Nạp tiền thành công
+        } catch (SQLException e) {
+            if (connection != null) {
+                // Rollback nếu có lỗi
+                connection.rollback();
+            }
+            e.printStackTrace();
+            return false;  // Nếu có lỗi, trả về false
+        } finally {
+            // Đảm bảo đóng kết nối và các tài nguyên
+            if (resultSet != null) {
+                resultSet.close();
+            }
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null) {
+                connection.setAutoCommit(true);  // Quay lại chế độ tự động commit
+                connection.close();
+            }
         }
     }
 
@@ -320,7 +564,7 @@ public class DataConnection {
 
         String query = "UPDATE card SET publicKey = ? WHERE idThe = ?";
 
-        try ( Connection connection = conn();  PreparedStatement statement = connection.prepareStatement(query);) {
+        try (Connection connection = conn(); PreparedStatement statement = connection.prepareStatement(query);) {
 
             statement.setString(1, String.valueOf(card.getModulus()) + "." + String.valueOf(card.getExponent()));
             statement.setString(2, card.getCardId());

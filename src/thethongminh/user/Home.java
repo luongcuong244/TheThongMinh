@@ -61,6 +61,7 @@ public class Home extends javax.swing.JFrame {
     private static ResponseAPDU response;
 
     private int selectedRowMyTicketTable = -1;
+    private int selectedRowTicketTable = -1;
 
     /**
      * Creates new form MainFrame
@@ -72,8 +73,7 @@ public class Home extends javax.swing.JFrame {
         cardManager = CardManager.getInstance();
         getUserData();
 
-        NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
-        jLabel6.setText(formatter.format(userMoney) + " VNĐ");
+        updateMoneyUI();
 
         edtName.setEditable(false);
         edtDateOfBirth.setEditable(false);
@@ -86,13 +86,15 @@ public class Home extends javax.swing.JFrame {
         updateUserInfo(user);
         setDataForTransactionHistoryTable();
         setDataForFlightHistoryTable();
+        setDataForFlightTable();
+        setDataForBookTicketTable();
         setDataForMyTicketTable();
     }
 
     public void setDataForTransactionHistoryTable() {
         try {
 
-            List<String[]> transactionHistoryData = DataConnection.fetchTransactionHistory("001");
+            List<String[]> transactionHistoryData = DataConnection.getTransactionHistoryByCardId("001");
 
             Vector<String> columnNames = new Vector<String>();
             columnNames.add("Mã giao dịch");
@@ -174,18 +176,59 @@ public class Home extends javax.swing.JFrame {
         }
     }
 
-    public void setDataForMyTicketTable() {
+    public void setDataForFlightTable() {
         try {
-            List<String[]> myTicketData = DataConnection.fetchTicketOfMember();
+            List<String[]> myTicketData = DataConnection.fetchAllFlights();
 
             Vector<String> columnNames = new Vector<String>();
-            columnNames.add("Mã vé đã đặt");
+            columnNames.add("Mã chuyến bay");
+            columnNames.add("Điểm đi");
+            columnNames.add("Điểm đến");
+            columnNames.add("Giờ đi");
+            columnNames.add("Giờ đến");
+
+            Vector<Vector<String>> data = new Vector<Vector<String>>();
+            for (int i = 0; i < myTicketData.size(); i++) {
+                String[] item = myTicketData.get(i);
+                Vector<String> row = new Vector<String>();
+                row.add(item[0]);
+                row.add(item[1]);
+                row.add(item[2]);
+                row.add(item[3]);
+                row.add(item[4]);
+                data.add(row);
+            }
+
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+
+            if (jTableMyTicket2 != null) {
+                jTableMyTicket2.setModel(tableModel);
+            };
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setDataForBookTicketTable() {
+        try {
+            List<String[]> myTicketData = DataConnection.fetchTickets();
+
+            Vector<String> columnNames = new Vector<String>();
             columnNames.add("Mã vé");
             columnNames.add("Mã chuyến bay");
-            columnNames.add("Mã người dùng");
-            columnNames.add("Số lượng đặt");
-            columnNames.add("Tổng thanh toán");
-            columnNames.add("Trạng thái");
+            columnNames.add("Điểm đi");
+            columnNames.add("Điểm đến");
+            columnNames.add("Giờ đi");
+            columnNames.add("Giờ đến");
+            columnNames.add("Mã số ghế");
+            columnNames.add("Giá vé");
 
             Vector<Vector<String>> data = new Vector<Vector<String>>();
             for (int i = 0; i < myTicketData.size(); i++) {
@@ -198,6 +241,67 @@ public class Home extends javax.swing.JFrame {
                 row.add(item[4]);
                 row.add(item[5]);
                 row.add(item[6]);
+                row.add(item[7]);
+                data.add(row);
+            }
+
+            DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            };
+
+            if (jTableMyTicket1 != null) {
+                jTableMyTicket1.setModel(tableModel);
+                jTableMyTicket1.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent event) {
+                        if (event.getButton() != MouseEvent.BUTTON1) {
+                            return;
+                        }
+                        if (event.getClickCount() == 1) {
+                            Point pnt = event.getPoint();
+                            int row = jTableMyTicket1.rowAtPoint(pnt);
+                            selectedRowTicketTable = row;
+                            return;
+                        }
+                    }
+                });
+            };
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void setDataForMyTicketTable() {
+        try {
+            List<String[]> myTicketData = DataConnection.fetchTicketOfMember("001");
+
+            Vector<String> columnNames = new Vector<String>();
+            columnNames.add("Mã vé");
+            columnNames.add("Mã chuyến bay");
+            columnNames.add("Điểm đi");
+            columnNames.add("Điểm đến");
+            columnNames.add("Giờ đi");
+            columnNames.add("Giờ đến");
+            columnNames.add("Mã số ghế");
+            columnNames.add("Giá vé");
+
+            Vector<Vector<String>> data = new Vector<Vector<String>>();
+            for (int i = 0; i < myTicketData.size(); i++) {
+                String[] item = myTicketData.get(i);
+                Vector<String> row = new Vector<String>();
+                row.add(item[0]);
+                row.add(item[1]);
+                row.add(item[2]);
+                row.add(item[3]);
+                row.add(item[4]);
+                row.add(item[5]);
+                row.add(item[6]);
+                row.add(item[7]);
                 data.add(row);
             }
 
@@ -220,12 +324,6 @@ public class Home extends javax.swing.JFrame {
                             Point pnt = event.getPoint();
                             int row = jTableMyTicket.rowAtPoint(pnt);
                             selectedRowMyTicketTable = row;
-                            String status = jTableMyTicket.getValueAt(row, 6).toString();
-                            if (status.equals("Đã thanh toán")) {
-                                btnPay.setEnabled(false);
-                            } else {
-                                btnPay.setEnabled(true);
-                            }
                             return;
                         }
                     }
@@ -279,6 +377,22 @@ public class Home extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableFlightHistory = new javax.swing.JTable();
+        jPanel14 = new javax.swing.JPanel();
+        jPanel15 = new javax.swing.JPanel();
+        jTextField7 = new javax.swing.JTextField();
+        jLabel23 = new javax.swing.JLabel();
+        jScrollPane6 = new javax.swing.JScrollPane();
+        jTableMyTicket2 = new javax.swing.JTable();
+        jPanel16 = new javax.swing.JPanel();
+        btnCheckin = new javax.swing.JButton();
+        jPanel11 = new javax.swing.JPanel();
+        jPanel12 = new javax.swing.JPanel();
+        jTextField6 = new javax.swing.JTextField();
+        jLabel22 = new javax.swing.JLabel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        jTableMyTicket1 = new javax.swing.JTable();
+        jPanel13 = new javax.swing.JPanel();
+        btnBookTicket = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         jTextField5 = new javax.swing.JTextField();
         jLabel21 = new javax.swing.JLabel();
@@ -287,7 +401,6 @@ public class Home extends javax.swing.JFrame {
         jButton7 = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         btnCancelTicket = new javax.swing.JButton();
-        btnPay = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         jLabel15 = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
@@ -731,6 +844,362 @@ public class Home extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Lịch sử chuyến bay", jPanel3);
 
+        jPanel15.setBackground(new java.awt.Color(244, 247, 250));
+
+        jTextField7.setBackground(new java.awt.Color(231, 251, 255));
+        jTextField7.setToolTipText("");
+        jTextField7.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(107, 228, 255)));
+
+        jLabel23.setIcon(new javax.swing.ImageIcon(getClass().getResource("/thethongminh/image/ic_search.png"))); // NOI18N
+
+        jTableMyTicket2.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {"09:57:34  23/08/2023", "09:57:34  23/08/2023", "09:57:34  23/08/2023", "Hà Nội", "Đà Nẵng", "2.400.000 VNĐ"},
+                {null, null, null, "", null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Ngày đặt", "Ngày đi", "Ngày đến", "Điểm đi", "Điểm đến", "Giá vé"
+            }
+        ));
+        jScrollPane6.setViewportView(jTableMyTicket2);
+
+        jPanel16.setBackground(new java.awt.Color(244, 247, 250));
+
+        btnCheckin.setBackground(new java.awt.Color(0, 153, 153));
+        btnCheckin.setForeground(new java.awt.Color(255, 255, 255));
+        btnCheckin.setText("Checkin");
+        btnCheckin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCheckinActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel16Layout = new javax.swing.GroupLayout(jPanel16);
+        jPanel16.setLayout(jPanel16Layout);
+        jPanel16Layout.setHorizontalGroup(
+            jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel16Layout.createSequentialGroup()
+                .addGap(0, 126, Short.MAX_VALUE)
+                .addComponent(btnCheckin))
+        );
+        jPanel16Layout.setVerticalGroup(
+            jPanel16Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(btnCheckin, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel15Layout = new javax.swing.GroupLayout(jPanel15);
+        jPanel15.setLayout(jPanel15Layout);
+        jPanel15Layout.setHorizontalGroup(
+            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel15Layout.createSequentialGroup()
+                .addGap(19, 19, 19)
+                .addComponent(jTextField7, javax.swing.GroupLayout.PREFERRED_SIZE, 331, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel23)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel16, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(21, 21, 21))
+            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 994, Short.MAX_VALUE)
+        );
+        jPanel15Layout.setVerticalGroup(
+            jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel15Layout.createSequentialGroup()
+                .addGap(20, 20, 20)
+                .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel23, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jTextField7)
+                    .addComponent(jPanel16, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout jPanel14Layout = new javax.swing.GroupLayout(jPanel14);
+        jPanel14.setLayout(jPanel14Layout);
+        jPanel14Layout.setHorizontalGroup(
+            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 994, Short.MAX_VALUE)
+            .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel14Layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(jPanel15, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
+        jPanel14Layout.setVerticalGroup(
+            jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 465, Short.MAX_VALUE)
+            .addGroup(jPanel14Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel14Layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(jPanel15, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
+
+        jTabbedPane1.addTab("Chuyến bay", jPanel14);
+
+        jPanel12.setBackground(new java.awt.Color(244, 247, 250));
+
+        jTextField6.setBackground(new java.awt.Color(231, 251, 255));
+        jTextField6.setToolTipText("");
+        jTextField6.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(107, 228, 255)));
+
+        jLabel22.setIcon(new javax.swing.ImageIcon(getClass().getResource("/thethongminh/image/ic_search.png"))); // NOI18N
+
+        jTableMyTicket1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {"09:57:34  23/08/2023", "09:57:34  23/08/2023", "09:57:34  23/08/2023", "Hà Nội", "Đà Nẵng", "2.400.000 VNĐ"},
+                {null, null, null, "", null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
+            },
+            new String [] {
+                "Ngày đặt", "Ngày đi", "Ngày đến", "Điểm đi", "Điểm đến", "Giá vé"
+            }
+        ));
+        jScrollPane4.setViewportView(jTableMyTicket1);
+
+        jPanel13.setBackground(new java.awt.Color(244, 247, 250));
+
+        btnBookTicket.setBackground(new java.awt.Color(0, 153, 153));
+        btnBookTicket.setForeground(new java.awt.Color(255, 255, 255));
+        btnBookTicket.setText("Đặt vé");
+        btnBookTicket.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBookTicketActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel13Layout = new javax.swing.GroupLayout(jPanel13);
+        jPanel13.setLayout(jPanel13Layout);
+        jPanel13Layout.setHorizontalGroup(
+            jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel13Layout.createSequentialGroup()
+                .addGap(0, 126, Short.MAX_VALUE)
+                .addComponent(btnBookTicket))
+        );
+        jPanel13Layout.setVerticalGroup(
+            jPanel13Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(btnBookTicket, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel12Layout = new javax.swing.GroupLayout(jPanel12);
+        jPanel12.setLayout(jPanel12Layout);
+        jPanel12Layout.setHorizontalGroup(
+            jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel12Layout.createSequentialGroup()
+                .addGap(19, 19, 19)
+                .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, 331, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel22)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel13, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(21, 21, 21))
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 994, Short.MAX_VALUE)
+        );
+        jPanel12Layout.setVerticalGroup(
+            jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel12Layout.createSequentialGroup()
+                .addGap(20, 20, 20)
+                .addGroup(jPanel12Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel22, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jTextField6)
+                    .addComponent(jPanel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
+        jPanel11.setLayout(jPanel11Layout);
+        jPanel11Layout.setHorizontalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 994, Short.MAX_VALUE)
+            .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel11Layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
+        jPanel11Layout.setVerticalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 465, Short.MAX_VALUE)
+            .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel11Layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+        );
+
+        jTabbedPane1.addTab("Đặt vé", jPanel11);
+
         jPanel6.setBackground(new java.awt.Color(244, 247, 250));
 
         jTextField5.setBackground(new java.awt.Color(231, 251, 255));
@@ -856,24 +1325,13 @@ public class Home extends javax.swing.JFrame {
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(107, Short.MAX_VALUE)
-                .addComponent(btnCancelTicket)
-                .addContainerGap())
+                .addGap(0, 126, Short.MAX_VALUE)
+                .addComponent(btnCancelTicket))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(btnCancelTicket, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-
-        btnPay.setBackground(new java.awt.Color(102, 102, 255));
-        btnPay.setForeground(new java.awt.Color(255, 255, 255));
-        btnPay.setText("Thanh toán");
-        btnPay.setEnabled(false);
-        btnPay.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnPayActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
@@ -886,9 +1344,7 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jLabel21)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(btnPay, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(19, 19, 19))
+                .addGap(21, 21, 21))
             .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 994, Short.MAX_VALUE)
             .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel6Layout.createSequentialGroup()
@@ -903,8 +1359,7 @@ public class Home extends javax.swing.JFrame {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabel21, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jTextField5)
-                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnPay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE))
             .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1035,21 +1490,26 @@ public class Home extends javax.swing.JFrame {
             new JLabel("Nạp tiền"), amountOfMoney,};
         int result = JOptionPane.showConfirmDialog(null, inputs, "Nạp tiền", JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
-            if (amountOfMoney.getText().trim().isEmpty()) {
-                return;
+            try {
+                if (amountOfMoney.getText().trim().isEmpty()) {
+                    return;
+                }
+                int amount = Integer.parseInt(amountOfMoney.getText().trim());
+                if (amount <= 0) {
+                    JOptionPane.showMessageDialog(this,
+                            "Số tiền phải lớn hơn 0!",
+                            "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                DataConnection.rechargeMoney("001", amount);
+                updateMoneyUI();
+                setDataForTransactionHistoryTable();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
             }
-            int amount = Integer.parseInt(amountOfMoney.getText().trim());
-            if (amount <= 0) {
-                JOptionPane.showMessageDialog(this,
-                        "Số tiền phải lớn hơn 0!",
-                        "Warning",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            userMoney += amount;
-            updateMoneyUI();
-            DataConnection.topupMoney("1", "001", amount);
-            setDataForTransactionHistoryTable();
         }
     }//GEN-LAST:event_jButton2ActionPerformed
 
@@ -1059,42 +1519,33 @@ public class Home extends javax.swing.JFrame {
 
     private void btnCancelTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelTicketActionPerformed
         if (selectedRowMyTicketTable > -1) {
-            String maVeDaDat = jTableMyTicket.getValueAt(selectedRowMyTicketTable, 0).toString();
-            DataConnection.cancelTicket(maVeDaDat);
-            setDataForMyTicketTable();
-            setDataForTransactionHistoryTable();
-            selectedRowMyTicketTable = -1;
-            btnPay.setEnabled(false);
-        }
-    }//GEN-LAST:event_btnCancelTicketActionPerformed
-
-    private void btnPayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPayActionPerformed
-        if (selectedRowMyTicketTable > -1) {
             try {
-                int money = Integer.parseInt(jTableMyTicket.getValueAt(selectedRowMyTicketTable, 5).toString());
-                if (money > userMoney) {
-                    JOptionPane.showMessageDialog(this,
-                            "Không đủ tiền!",
-                            "Warning",
-                            JOptionPane.WARNING_MESSAGE);
-                    return;
+                String maVe = jTableMyTicket.getValueAt(selectedRowMyTicketTable, 0).toString();
+                boolean isSuccessfully = DataConnection.cancelTicket("001", maVe);
+                
+                if (isSuccessfully) {
+                    JOptionPane.showMessageDialog(null,
+                            "Hủy vé thành công",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    setDataForMyTicketTable();
+                    setDataForBookTicketTable();
+                    setDataForTransactionHistoryTable();
+                    updateMoneyUI();
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Đặt vé thất bại",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
                 }
-
-                String maVeDaDat = jTableMyTicket.getValueAt(selectedRowMyTicketTable, 0).toString();
-                DataConnection.payTicket(maVeDaDat, "001", money);
-                setDataForMyTicketTable();
-                setDataForTransactionHistoryTable();
                 selectedRowMyTicketTable = -1;
-                btnPay.setEnabled(false);
-                userMoney -= money;
-                updateMoneyUI();
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
             } catch (SQLException ex) {
                 Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }//GEN-LAST:event_btnPayActionPerformed
+    }//GEN-LAST:event_btnCancelTicketActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         char[] passInput = newPassInput.getPassword();
@@ -1146,99 +1597,134 @@ public class Home extends javax.swing.JFrame {
             return;
         }
 
-        try {
-
-            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_UPDATE_PIN, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, CardUtils.convertPinToByte(newPin));
-            int sw = response.getSW();
-            System.out.println("sw UPDATE_PIN res: " + CardUtils.convertSWToHex(sw));
-            System.out.println("data UPDATE_PIN res: " + CardUtils.converBytesToHex(response.getData()));
-
-            switch (sw) {
-                case Constants.SW_INVALID_PIN_LENGTH:
-                    JOptionPane.showMessageDialog(null,
-                            "Độ dài PIN không chính xác!",
-                            "Thông báo",
-                            JOptionPane.ERROR_MESSAGE);
-                    break;
-                case Constants.SW_PIN_NOT_VALIDATED:
-                    JOptionPane.showMessageDialog(null,
-                            "Thẻ chưa xác thực",
-                            "Thông báo",
-                            JOptionPane.ERROR_MESSAGE);
-                    break;
-                case Constants.SW_SUCCESS:
-                    JOptionPane.showMessageDialog(null,
-                            "Mã PIN đã được cập nhật",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    break;
-                default:
-                    System.out.println("Unknown res SW");
-                    break;
-            }
-
-        } catch (CardException ex) {
-            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        try {
+//
+//            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_UPDATE_PIN, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, CardUtils.convertPinToByte(newPin));
+//            int sw = response.getSW();
+//            System.out.println("sw UPDATE_PIN res: " + CardUtils.convertSWToHex(sw));
+//            System.out.println("data UPDATE_PIN res: " + CardUtils.converBytesToHex(response.getData()));
+//
+//            switch (sw) {
+//                case Constants.SW_INVALID_PIN_LENGTH:
+//                    JOptionPane.showMessageDialog(null,
+//                            "Độ dài PIN không chính xác!",
+//                            "Thông báo",
+//                            JOptionPane.ERROR_MESSAGE);
+//                    break;
+//                case Constants.SW_PIN_NOT_VALIDATED:
+//                    JOptionPane.showMessageDialog(null,
+//                            "Thẻ chưa xác thực",
+//                            "Thông báo",
+//                            JOptionPane.ERROR_MESSAGE);
+//                    break;
+//                case Constants.SW_SUCCESS:
+//                    JOptionPane.showMessageDialog(null,
+//                            "Mã PIN đã được cập nhật",
+//                            "Thông báo",
+//                            JOptionPane.INFORMATION_MESSAGE);
+//                    break;
+//                default:
+//                    System.out.println("Unknown res SW");
+//                    break;
+//            }
+//
+//        } catch (CardException ex) {
+//            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }//GEN-LAST:event_jButton4ActionPerformed
 
-    public void getUserData() {
-        try {
-            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_PRINT, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, null);
-            int sw = response.getSW();
-            byte[] resData = response.getData();
-            System.out.println("sw INS_PRINT res: " + CardUtils.convertSWToHex(sw));
-            System.out.println("data INS_PRINT res: " + CardUtils.converBytesToHex(resData));
-            if(sw == Constants.SW_SUCCESS) {
-                byte[][] splitedData = CardUtils.splitData(resData, Constants.SEPARATOR, 6);
+    private void btnBookTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBookTicketActionPerformed
+        if (selectedRowTicketTable > -1) {
+            try {
+                String maVe = jTableMyTicket1.getValueAt(selectedRowTicketTable, 0).toString();
+                boolean isSuccessfully = DataConnection.bookTicket("001", maVe);
 
-                byte[] cardIdByte = splitedData[0];
-                byte[] nameByte = splitedData[1];
-                byte[] birthdayByte = splitedData[2];
-                byte[] addressByte = splitedData[3];
-                byte[] phoneByte = splitedData[4];
-                byte[] imageLenByte = splitedData[5];
-                
-                System.out.println("sw cardIdByte res: " + CardUtils.convertBytesToStringUTF8(cardIdByte));
-                System.out.println("sw nameByte res: " + CardUtils.convertBytesToStringUTF8(nameByte));
-                System.out.println("sw birthdayByte res: " + CardUtils.convertBytesToStringUTF8(birthdayByte));
-                System.out.println("sw addressByte res: " + CardUtils.convertBytesToStringUTF8(addressByte));
-                System.out.println("sw phoneByte res: " + CardUtils.convertBytesToStringUTF8(phoneByte));
-                System.out.println("sw imageLenByte res: " + CardUtils.convertBytesToStringUTF8(imageLenByte));
-                
-                ByteBuffer buffer = ByteBuffer.wrap(imageLenByte);
-                short imageLen = buffer.getShort();
-                System.out.println("image length: " + imageLen);
-                byte[] imageByte = new byte[imageLen];  
-                int offset = 0;
-                int count = 0;
-                while(imageLen > 0) {
-                    int ne = imageLen > Constants.MAX_LENGTH ? Constants.MAX_LENGTH : imageLen;
-                    response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_PRINT, Constants.PARAM_P1_PRINT, count, ne);
-                    sw = response.getSW();
-                    if(sw == Constants.SW_SUCCESS) {
-                        System.arraycopy(response.getData(), 0, imageByte, offset, ne);
-                        offset += ne;
-                        imageLen -= ne;
-                        count++;
-                    }else {
-                        System.out.println("Error");
-                        return;
-                    }
+                if (isSuccessfully) {
+                    JOptionPane.showMessageDialog(null,
+                            "Đặt vé thành công",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    setDataForMyTicketTable();
+                    setDataForBookTicketTable();
+                    setDataForTransactionHistoryTable();
+                    updateMoneyUI();
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Đặt vé thất bại",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
                 }
-                System.out.println("image byte: " + CardUtils.converBytesToHex(imageByte));
-                this.user = new User(CardUtils.convertBytesToStringUTF8(nameByte),
-                            CardUtils.convertBytesToStringUTF8(birthdayByte), 
-                                CardUtils.convertBytesToStringUTF8(addressByte),
-                            CardUtils.convertBytesToStringUTF8(phoneByte),
-                            ImageUtils.byteArrayToBufferedImage(imageByte));
-            }
 
-        } catch (CardException ex) {
-            Logger.getLogger(Connect.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+                selectedRowTicketTable = -1;
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+    }//GEN-LAST:event_btnBookTicketActionPerformed
+
+    private void btnCheckinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckinActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnCheckinActionPerformed
+
+    public void getUserData() {
+//        try {
+//            response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_PRINT, Constants.PARAM_DEFAULT, Constants.PARAM_DEFAULT, null);
+//            int sw = response.getSW();
+//            byte[] resData = response.getData();
+//            System.out.println("sw INS_PRINT res: " + CardUtils.convertSWToHex(sw));
+//            System.out.println("data INS_PRINT res: " + CardUtils.converBytesToHex(resData));
+//            if(sw == Constants.SW_SUCCESS) {
+//                byte[][] splitedData = CardUtils.splitData(resData, Constants.SEPARATOR, 6);
+//
+//                byte[] cardIdByte = splitedData[0];
+//                byte[] nameByte = splitedData[1];
+//                byte[] birthdayByte = splitedData[2];
+//                byte[] addressByte = splitedData[3];
+//                byte[] phoneByte = splitedData[4];
+//                byte[] imageLenByte = splitedData[5];
+//                
+//                System.out.println("sw cardIdByte res: " + CardUtils.convertBytesToStringUTF8(cardIdByte));
+//                System.out.println("sw nameByte res: " + CardUtils.convertBytesToStringUTF8(nameByte));
+//                System.out.println("sw birthdayByte res: " + CardUtils.convertBytesToStringUTF8(birthdayByte));
+//                System.out.println("sw addressByte res: " + CardUtils.convertBytesToStringUTF8(addressByte));
+//                System.out.println("sw phoneByte res: " + CardUtils.convertBytesToStringUTF8(phoneByte));
+//                System.out.println("sw imageLenByte res: " + CardUtils.convertBytesToStringUTF8(imageLenByte));
+//                
+//                ByteBuffer buffer = ByteBuffer.wrap(imageLenByte);
+//                short imageLen = buffer.getShort();
+//                System.out.println("image length: " + imageLen);
+//                byte[] imageByte = new byte[imageLen];  
+//                int offset = 0;
+//                int count = 0;
+//                while(imageLen > 0) {
+//                    int ne = imageLen > Constants.MAX_LENGTH ? Constants.MAX_LENGTH : imageLen;
+//                    response = cardManager.sendApduCommand(Constants.CLA, Constants.INS_PRINT, Constants.PARAM_P1_PRINT, count, ne);
+//                    sw = response.getSW();
+//                    if(sw == Constants.SW_SUCCESS) {
+//                        System.arraycopy(response.getData(), 0, imageByte, offset, ne);
+//                        offset += ne;
+//                        imageLen -= ne;
+//                        count++;
+//                    }else {
+//                        System.out.println("Error");
+//                        return;
+//                    }
+//                }
+//                System.out.println("image byte: " + CardUtils.converBytesToHex(imageByte));
+//                this.user = new User(CardUtils.convertBytesToStringUTF8(nameByte),
+//                            CardUtils.convertBytesToStringUTF8(birthdayByte), 
+//                                CardUtils.convertBytesToStringUTF8(addressByte),
+//                            CardUtils.convertBytesToStringUTF8(phoneByte),
+//                            ImageUtils.byteArrayToBufferedImage(imageByte));
+//            }
+//
+//        } catch (CardException ex) {
+//            Logger.getLogger(Connect.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IOException ex) {
+//            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 
     }
 
@@ -1254,6 +1740,11 @@ public class Home extends javax.swing.JFrame {
     }
 
     public void updateMoneyUI() {
+        try {
+            userMoney = (int) DataConnection.getBalanceByCard("001");
+        } catch (Exception e) {
+
+        }
         NumberFormat formatter = NumberFormat.getInstance(Locale.getDefault());
         jLabel6.setText(formatter.format(userMoney) + " VNĐ");
     }
@@ -1297,8 +1788,9 @@ public class Home extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnBookTicket;
     private javax.swing.JButton btnCancelTicket;
-    private javax.swing.JButton btnPay;
+    private javax.swing.JButton btnCheckin;
     private javax.swing.JPasswordField confirmPassInput;
     private javax.swing.JTextField edtAddressCard;
     private javax.swing.JTextField edtDateOfBirth;
@@ -1314,6 +1806,8 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel19;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1322,6 +1816,12 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
+    private javax.swing.JPanel jPanel12;
+    private javax.swing.JPanel jPanel13;
+    private javax.swing.JPanel jPanel14;
+    private javax.swing.JPanel jPanel15;
+    private javax.swing.JPanel jPanel16;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -1333,14 +1833,20 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
+    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableFlightHistory;
     private javax.swing.JTable jTableMyTicket;
+    private javax.swing.JTable jTableMyTicket1;
+    private javax.swing.JTable jTableMyTicket2;
     private javax.swing.JTable jTableTransactionHistory;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField5;
+    private javax.swing.JTextField jTextField6;
+    private javax.swing.JTextField jTextField7;
     private javax.swing.JPasswordField newPassInput;
     private thethongminh.view.PanelRound panelRound1;
     private thethongminh.view.PanelRound panelRound2;
